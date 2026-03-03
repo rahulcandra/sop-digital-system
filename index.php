@@ -12,6 +12,7 @@ require_once 'config/database.php';
 $error = '';
 
 $saved_username = isset($_COOKIE['remember_username']) ? $_COOKIE['remember_username'] : '';
+$registered = isset($_GET['registered']) ? true : false;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
@@ -616,6 +617,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <i class="fas fa-exclamation-triangle"></i> <?php echo $error; ?>
                     </div>
                 <?php endif; ?>
+
+                <?php if ($registered): ?>
+                    <div class="alert alert-success" id="alert-registered">
+                        <i class="fas fa-check-circle"></i> Akun berhasil dibuat! Silahkan login.
+                    </div>
+                <?php endif; ?>
                 
                 <?php if (isset($_GET['logout'])): ?>
                     <div class="alert alert-success" id="alert-logout">
@@ -631,9 +638,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <input type="text" id="username" name="username" class="form-control" 
                                    placeholder="Masukkan username Anda" value="<?php echo htmlspecialchars($saved_username); ?>" required autocomplete="off">
                         </div>
-                        <div class="input-hint" id="hint-username">
-                            <i class="fas fa-lightbulb"></i> Saran: <strong>admin</strong> atau <strong>user</strong>
-                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -643,9 +647,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <input type="password" id="password" name="password" class="form-control" 
                                    placeholder="Masukkan password Anda" required>
                             <i class="fas fa-eye toggle-password" id="togglePassword" title="Show/Hide Password"></i>
-                        </div>
-                        <div class="input-hint" id="hint-password">
-                            <i class="fas fa-lightbulb"></i> Saran: <strong>12345
                         </div>
                     </div>
 
@@ -660,6 +661,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <button type="submit" class="btn-primary">
                         <i class="fas fa-rocket"></i> Login System
                     </button>
+
+                    <div style="text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-muted);">
+                    Belum punya akun? 
+                        <a href="register.php" style="color: var(--primary-glow); font-weight: 600; text-decoration: none; transition: color 0.3s;">
+                    Daftar Sekarang
+                        </a>
+                    </div>
                 </form>
                 
                 <div class="demo-info">
@@ -683,13 +691,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 setTimeout(function() {
                     logoutAlert.style.opacity = '0';
                     logoutAlert.style.transform = 'translateY(-10px)';
-
                     setTimeout(function() {
                         logoutAlert.style.display = 'none';
                     }, 500); 
-
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }, 3000); // 3000 ms = 3 detik
+            }
+
+             // --- AUTO HIDE ALERT REGISTRASI (3 DETIK) ---
+            const registeredAlert = document.getElementById('alert-registered');
+            if (registeredAlert) {
+                setTimeout(function() {
+                    registeredAlert.style.opacity = '0';
+                    registeredAlert.style.transform = 'translateY(-10px)';
+                    setTimeout(function() {
+                        registeredAlert.style.display = 'none';
+                    }, 500);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 3000);
             }
 
             // --- Fitur Toggle Tema Gelap/Terang ---
