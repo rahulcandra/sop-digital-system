@@ -13,6 +13,7 @@ $error = '';
 
 $saved_username = isset($_COOKIE['remember_username']) ? $_COOKIE['remember_username'] : '';
 $registered = isset($_GET['registered']) ? true : false;
+$reset_success = isset($_GET['reset']) ? true : false;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
@@ -624,6 +625,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                 <?php endif; ?>
                 
+                <?php if ($reset_success): ?>
+                    <div class="alert alert-success" id="alert-reset">
+                        <i class="fas fa-check-circle"></i> Password berhasil diubah! Silahkan login.
+                    </div>
+                <?php endif; ?>
+
                 <?php if (isset($_GET['logout'])): ?>
                     <div class="alert alert-success" id="alert-logout">
                         <i class="fas fa-check-circle"></i> Anda telah berhasil logout.
@@ -707,6 +714,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     setTimeout(function() {
                         registeredAlert.style.display = 'none';
                     }, 500);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 3000);
+            }
+
+             // --- AUTO HIDE ALERT RESET PASSWORD ---
+            const resetAlert = document.getElementById('alert-reset');
+            if (resetAlert) {
+                setTimeout(function() {
+                    resetAlert.style.opacity = '0';
+                    resetAlert.style.transform = 'translateY(-10px)';
+                setTimeout(function() { resetAlert.style.display = 'none'; }, 500);
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }, 3000);
             }
