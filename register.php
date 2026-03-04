@@ -232,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .register-logo {
-            width: 110px;
+            width: 160px;
             height: auto;
             margin-bottom: 5px !important;
             filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.4));
@@ -563,7 +563,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <img src="assets/images/logo.png" alt="Logo" class="register-logo"
                      onerror="this.src='https://cdn-icons-png.flaticon.com/512/2991/2991148.png'">
 
-                <h1 class="register-brand-title">SINERGI<br>NUSANTARA<br>INTEGRASI</h1>
                 <p class="register-subtitle">
                     Daftarkan akun Anda dan mulai kelola SOP digital dengan lebih efisien dan terstruktur.
                 </p>
