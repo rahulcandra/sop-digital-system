@@ -113,7 +113,7 @@ $flash = getFlashMessage();
     <div class="dashboard-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="../assets/images/logo.png" alt="Logo" class="sidebar-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2991/2991148.png'">
+                <img src="../assets/images/logo.png" alt="Logo" style="width:200px;">
                 <h3>SOP Digital</h3>
                 <p>User Panel</p>
             </div>
