@@ -8,13 +8,15 @@ Sistem Manajemen Dokumen Standard Operating Procedure (SOP) berbasis web yang di
 - `/config` : Konfigurasi database dan sistem.
 - `/assets` : Kumpulan file HTML, CSS, JS, dan (Logo/Gambar).
 - `/includes` : File logic yang digunakan berulang (seperti session).
+- `/docs` : Dokumentasi database (database.sql).
 
 ## ✨ Fitur Utama
-- **Dashboard Interaktif**: Ringkasan data SOP yang tersedia.
-- **Authentication**: Login yang aman dengan hak akses (Admin & User).
-- **Forgot Password**: Fitur pemulihan akun melalui token.
-- **Preview & Print**: Membaca SOP langsung di web dan mencetaknya secara rapi.
-- **Manajemen Kategori**: Pengelompokan SOP berdasarkan departemen.
+- **Dashboard Interaktif**: Ringkasan jumlah data kategori dan SOP yang tersedia.
+- **Authentication & Authorization**: Sistem login aman dengan pemisahan hak akses (Admin & User).
+- **Manajemen SOP (AJAX)**: Pengelolaan dokumen SOP dan kategori menggunakan AJAX untuk pengalaman pengguna yang lebih cepat.
+- **Forgot & Reset Password**: Fitur pemulihan akun melalui token jika user lupa kata sandi.
+- **Preview & Print**: Membaca dokumen SOP secara langsung di browser dan mencetaknya dengan format yang rapi.
+- **Digital Asset**: Penggunaan tanda tangan digital (`ttd.png`) dan logo perusahaan pada dokumen.
 
 ## 🛠️ Teknologi yang Digunakan
 - **Backend**: PHP 8.2 (Native)
@@ -23,10 +25,11 @@ Sistem Manajemen Dokumen Standard Operating Procedure (SOP) berbasis web yang di
 - **Server**: XAMPP (Apache dan MySQL)
 
 ## 🚀 Cara Instalasi
-1. Pindahkan folder ini ke direktori `htdocs` Anda.
-2. Import database `database.sql` melalui phpMyAdmin.
-3. Sesuaikan username dan password database di file `config/database.php`.
-4. Jalankan `localhost/sop-digital-system` pada browser Anda.
+1. Pindahkan folder proyek ini ke direktori `htdocs` (XAMPP) atau `www` (Laragon) Anda.
+2. Buat database baru di phpMyAdmin dengan nama `sop_digital_db`.
+3. Import file `docs/database.sql` ke dalam database tersebut.
+4. Sesuaikan kredensial (host, user, pass) pada file `config/database.php`.
+5. Jalankan `localhost/sop-digital-system` pada browser Anda.
 
 ## 🔑 Akun Demo
 Gunakan akun berikut untuk masuk ke dalam sistem:
