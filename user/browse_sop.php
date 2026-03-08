@@ -173,21 +173,20 @@ $flash = getFlashMessage();
     <div class="dashboard-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="../assets/images/logo.png" alt="Logo" style="width:200px;">
-                <h3>SOP Digital</h3>
-                <p>User Panel</p>
+                <img src="../assets/images/logo.png" alt="Logo" style="width:220px;">
+                <p>SOP Digital System</p>
             </div>
             <ul class="sidebar-menu">
                 <li><a href="dashboard.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-                <li><a href="browse_sop.php" class="active"><i class="fas fa-search"></i><span>Cari SOP</span></a></li>
-                <li><a href="kategori.php"><i class="fas fa-folder"></i><span>Kategori</span></a></li>
+                <li><a href="browse_sop.php" class="active"><i class="fas fa-file-alt"></i><span>Daftar SOP</span></a></li>
+                <li><a href="kategori.php"><i class="fas fa-folder"></i><span>Kategori SOP</span></a></li>
             </ul>
         </aside>
         
         <main class="main-content">
             <div class="topbar">
                 <div class="topbar-left">
-                    <h2><i class="fas fa-search" style="color:#3b82f6"></i> Cari SOP</h2>
+                    <h2><i class="fas fa-file-alt" style="color:#3b82f6"></i> Daftar SOP</h2>
                 </div>
                 <div class="topbar-right">
                     <button type="button" id="theme-toggle-btn" title="Ganti Tema"><i class="fas fa-moon" id="theme-icon"></i></button>
@@ -211,42 +210,39 @@ $flash = getFlashMessage();
                     </div>
                 <?php endif; ?>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-filter"></i> Filter Pencarian</h3>
-                        <button onclick="openModal('addModal')" class="btn btn-success"><i class="fas fa-plus"></i> Ajukan SOP Baru</button>
-                    </div>
-                    <div class="card-body">
-                        <form method="GET" action="" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
-                            <div class="form-group" style="margin: 0;">
-                                <label>Cari Judul</label>
-                                <input type="text" name="search" class="form-control" placeholder="Cari SOP..." value="<?php echo htmlspecialchars($search); ?>">
-                            </div>
-                            <div class="form-group" style="margin: 0;">
-                                <label>Kategori</label>
-                                <select name="kategori" class="form-control">
-                                    <option value="">Semua Kategori</option>
-                                    <?php 
-                                    mysqli_data_seek($result_cat, 0); // reset pointer
-                                    while ($cat = mysqli_fetch_assoc($result_cat)): 
-                                    ?>
-                                        <option value="<?php echo $cat['id']; ?>" <?php echo ($kategori_filter == $cat['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($cat['nama_kategori']); ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
-                            </div>
-                            <div style="display: flex; gap: 10px;">
-                                <button type="submit" class="btn btn-info"><i class="fas fa-search"></i> Cari</button>
-                                <a href="browse_sop.php" class="btn btn-danger"><i class="fas fa-redo"></i> Reset</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+<div class="card">
+    <div class="card-body">
+        <form method="GET" action="" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+            <div class="form-group" style="margin: 0;">
+                <label>Cari Judul SOP</label>
+                <input type="text" name="search" class="form-control" placeholder="Cari SOP..." value="<?php echo htmlspecialchars($search); ?>">
+            </div>
+            <div class="form-group" style="margin: 0;">
+                <label>Kategori</label>
+                <select name="kategori" class="form-control">
+                    <option value="">Semua Kategori</option>
+                    <?php 
+                    mysqli_data_seek($result_cat, 0);
+                    while ($cat = mysqli_fetch_assoc($result_cat)): 
+                    ?>
+                        <option value="<?php echo $cat['id']; ?>" <?php echo ($kategori_filter == $cat['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($cat['nama_kategori']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-info"><i class="fas fa-search"></i> Cari</button>
+                <a href="browse_sop.php" class="btn btn-danger"><i class="fas fa-redo"></i> Reset</a>
+                <button type="button" onclick="openModal('addModal')" class="btn btn-success"><i class="fas fa-plus"></i> Ajukan SOP Baru</button>
+            </div>
+        </form>
+    </div>
+</div>
                 
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fas fa-list"></i> Hasil Pencarian</h3>
+                        <h3><i class="fas fa-file-alt"></i> Daftar Seluruh Dokumen SOP</h3>
                     </div>
                     <div class="card-body">
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">

@@ -149,10 +149,8 @@ $flash          = getFlashMessage();
 <div class="dashboard-wrapper">
     <aside class="sidebar">
         <div class="sidebar-header">
-            <img src="../assets/images/logo.png" alt="Logo" style="width:200px;">
-            <h3>SOP Digital</h3>
-            <p>Admin Panel</p>
-            <strong><?php echo getNamaLengkap(); ?></strong>
+            <img src="../assets/images/logo.png" alt="Logo" style="width:220px;">
+            <p>SOP Digital System</p>
         </div>
         <ul class="sidebar-menu">
             <li><a href="dashboard.php" class="active"><i class="fas fa-chart-line"></i><span>Dashboard</span></a></li>
@@ -184,7 +182,6 @@ $flash          = getFlashMessage();
                     <div class="user-avatar"><?php echo strtoupper(substr(getNamaLengkap(), 0, 1)); ?></div>
                     <div>
                         <strong><?php echo getNamaLengkap(); ?></strong>
-                        <p>Administrator</p>
                     </div>
                 </div>
                 <a href="../logout.php" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>

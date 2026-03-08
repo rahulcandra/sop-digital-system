@@ -143,12 +143,12 @@ $sop = mysqli_fetch_assoc($result);
     <div class="dashboard-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="../assets/images/logo.png" alt="Logo" style="width:200px;">
-                <p>User Panel</p>
+                <img src="../assets/images/logo.png" alt="Logo" style="width:220px;">
+                <p>SOP Digital System</p>
             </div>
             <ul class="sidebar-menu">
                 <li><a href="dashboard.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-                <li><a href="browse_sop.php"><i class="fas fa-search"></i><span>Cari SOP</span></a></li>
+                <li><a href="browse_sop.php"><i class="fas fa-file-alt"></i><span>Daftar SOP</span></a></li>
                 <li><a href="kategori.php"><i class="fas fa-folder"></i><span>Kategori</span></a></li>
             </ul>
         </aside>
