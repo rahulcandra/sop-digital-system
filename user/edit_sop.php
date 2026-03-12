@@ -187,7 +187,7 @@ $flash = getFlashMessage();
     </div>
 
     <script>
-        // SCRIPT TEMA IDENTIK
+        // SCRIPT TEMA
         (function() {
             if (localStorage.getItem('theme') === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');

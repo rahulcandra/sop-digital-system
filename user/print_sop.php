@@ -21,9 +21,6 @@ if (mysqli_num_rows($result) == 0) {
 
 $sop = mysqli_fetch_assoc($result);
 
-// =========================================================================
-// PROTEKSI: Cek Status SOP. Hanya boleh dicetak jika statusnya "Disetujui"
-// =========================================================================
 if (strtolower(trim($sop['status'])) !== 'disetujui') {
     $status_text = htmlspecialchars($sop['status']);
     
@@ -237,7 +234,6 @@ if (strtolower(trim($sop['status'])) !== 'disetujui') {
     </html>
     ");
 }
-// =========================================================================
 
 $print_by = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : (isset($_SESSION['username']) ? $_SESSION['username'] : 'Administrator');
 
@@ -265,13 +261,13 @@ $qr_api_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=0
         html, body {
             margin: 0;
             padding: 0;
-            background: #e2e8f0; /* Terang secara default */
+            background: #e2e8f0; 
             font-family: 'Inter', Arial, sans-serif;
             color: #1e293b;
             transition: background 0.3s ease;
         }
 
-        /* Kertas Print (Harus selalu putih murni) */
+        /* Kertas Print */
         .paper-preview {
             background: #ffffff !important;
             width: 210mm;
