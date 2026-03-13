@@ -139,6 +139,8 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
 
         .sidebar{background:var(--sb)!important;border-right:1px solid var(--gb)!important;backdrop-filter:blur(12px);}
         .sidebar-header{border-bottom:1px solid var(--gb)!important;padding:20px;}
+        .sidebar-header h3{color:var(--tm)!important;margin:4px 0 2px;font-size:16px;font-weight:700;}
+        .sidebar-header p{color:var(--tmut)!important;margin:0;font-size:12px;}
         .sidebar-menu{list-style:none;margin:0;padding:12px 0;}
         .sidebar-menu li a{display:flex;align-items:center;gap:10px;padding:12px 20px;color:var(--sl)!important;text-decoration:none;border-left:3px solid transparent;font-size:14px;font-weight:500;transition:.25s;}
         .sidebar-menu li a:hover,.sidebar-menu li a.active{background:var(--sa)!important;color:#3b82f6!important;border-left-color:#3b82f6;}
