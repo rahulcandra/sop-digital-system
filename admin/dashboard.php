@@ -703,7 +703,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
 <script>
 (function () {
     var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-    var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    var months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
     function pad(n) { return n < 10 ? '0' + n : n; }
 
