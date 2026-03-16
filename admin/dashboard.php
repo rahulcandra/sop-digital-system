@@ -724,7 +724,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         if (dateEl)  dateEl.textContent  = dayName + ', ' + dateStr;
     }
 
-    tick(); // langsung tampil tanpa jeda
+    tick(); 
     setInterval(tick, 1000);
 })();
 </script>
