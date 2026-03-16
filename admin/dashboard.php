@@ -378,8 +378,8 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
                 <div class="stat-card">
                     <div class="stat-icon purple"><i class="fas fa-clock"></i></div>
                     <div class="stat-info">
-                        <h3><?php echo date('H:i'); ?></h3>
-                        <p><?php echo date('d M Y'); ?></p>
+<h3 id="liveClock"><?php echo date('H:i:s'); ?></h3>
+<p id="liveDate"><?php echo date('d M Y'); ?></p>
                     </div>
                 </div>
             </div>
@@ -698,6 +698,35 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
             });
         });
     });
+    
+</script>
+<script>
+(function () {
+    var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    function pad(n) { return n < 10 ? '0' + n : n; }
+
+    function tick() {
+        var now = new Date();
+
+        var h = pad(now.getHours());
+        var m = pad(now.getMinutes());
+        var s = pad(now.getSeconds());
+
+        var dayName  = days[now.getDay()];
+        var dateStr  = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+
+        var clockEl = document.getElementById('liveClock');
+        var dateEl  = document.getElementById('liveDate');
+
+        if (clockEl) clockEl.textContent = h + ':' + m + ':' + s;
+        if (dateEl)  dateEl.textContent  = dayName + ', ' + dateStr;
+    }
+
+    tick(); // langsung tampil tanpa jeda
+    setInterval(tick, 1000);
+})();
 </script>
 </body>
 </html>
