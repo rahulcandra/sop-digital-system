@@ -280,7 +280,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
 (function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})();
 document.addEventListener('DOMContentLoaded',function(){
     var btn=document.getElementById('theme-toggle-btn'),icon=document.getElementById('theme-icon');
-    function sync(){icon.className=document.documentElement.getAttribute('data-theme')==='light'?'fas fa-sun':'fas fa-moon';}
+    function sync(){icon.className=document.documentElement.getAttribute('data-theme')==='light'?'far fa-sun':'fas fa-moon';}
     sync();
     if(btn)btn.addEventListener('click',function(){var l=document.documentElement.getAttribute('data-theme')==='light';if(l){document.documentElement.removeAttribute('data-theme');localStorage.setItem('theme','dark');}else{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('theme','light');}sync();});
 

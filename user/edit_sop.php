@@ -200,7 +200,7 @@ $flash = getFlashMessage();
 
             function sync() {
                 if (icon) {
-                    icon.className = document.documentElement.getAttribute('data-theme') === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+                    icon.className = document.documentElement.getAttribute('data-theme') === 'light' ? 'far fa-sun' : 'fas fa-moon';
                 }
             }
             sync();

@@ -269,11 +269,11 @@ $greeting_icon = $hour < 12 ? '🌅' : ($hour < 17 ? '☀️' : ($hour < 20 ? '�
         /* ═══ TABLE ═══ */
         .table-responsive{overflow-x:auto;border-radius:10px;overflow:hidden;}
         table{width:100%!important;border-collapse:collapse!important;}
-        thead tr{background:rgba(0,0,0,.3)!important;}
-        [data-theme="light"] thead tr{background:#e9eef5!important;}
-        thead th{color:var(--tmut)!important;padding:12px 16px!important;font-size:.72rem!important;font-weight:600!important;text-transform:uppercase!important;letter-spacing:.6px!important;border:none!important;text-align:left;}
-        tbody tr:nth-child(odd) td{background:rgba(15,23,42,.5)!important;}
-        tbody tr:nth-child(even) td{background:rgba(15,23,42,.3)!important;}
+        thead tr{background:rgba(59,130,246,.12)!important;}
+        [data-theme="light"] thead tr{background:rgba(59,130,246,.07)!important;}
+        thead th{color:#94a3b8!important;padding:12px 16px!important;font-size:.72rem!important;font-weight:600!important;text-transform:uppercase!important;letter-spacing:.6px!important;border:none!important;text-align:left;}
+        tbody tr:nth-child(odd) td{background:rgba(30,42,70,.45)!important;}
+        tbody tr:nth-child(even) td{background:rgba(22,33,55,.25)!important;}
         [data-theme="light"] tbody tr:nth-child(odd) td{background:rgba(255,255,255,.95)!important;}
         [data-theme="light"] tbody tr:nth-child(even) td{background:rgba(248,250,252,.9)!important;}
         tbody tr:hover td{background:rgba(59,130,246,.09)!important;}
@@ -314,6 +314,37 @@ $greeting_icon = $hour < 12 ? '🌅' : ($hour < 17 ? '☀️' : ($hour < 20 ? '�
         .revisi-alert-text span{font-size:12.5px;color:var(--tmut);}
 
         @media(max-width:768px){.stats-grid{grid-template-columns:1fr 1fr;}}
+
+        /* ═══ FORCE OVERRIDE TABLE HEADER ═══ */
+#status-sop table thead tr,
+#status-sop table thead tr th {
+    background: #ffffff !important;
+    border-bottom: 1px solid #fbfbfb !important;
+}
+#status-sop table thead th {
+    color: #7dd3fc !important;
+    font-weight: 700 !important;
+}
+[data-theme="light"] #status-sop table thead tr,
+[data-theme="light"] #status-sop table thead tr th {
+    background: rgb(255, 255, 255) !important;
+    border-bottom: 1px solid #ffffff !important;
+}
+[data-theme="light"] #status-sop table thead th {
+    color: #2563eb !important;
+}
+#status-sop table tbody tr:nth-child(odd) td {
+    background: rgba(30,50,90,.35) !important;
+}
+#status-sop table tbody tr:nth-child(even) td {
+    background: rgba(20,35,65,.20) !important;
+}
+[data-theme="light"] #status-sop table tbody tr:nth-child(odd) td {
+    background: rgba(239,246,255,.80) !important;
+}
+[data-theme="light"] #status-sop table tbody tr:nth-child(even) td {
+    background: rgba(255,255,255,.95) !important;
+}
     </style>
 </head>
 <body>
@@ -602,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // THEME
     var btn=document.getElementById('theme-toggle-btn'), icon=document.getElementById('theme-icon');
-    function syncIcon(){ if(icon) icon.className = document.documentElement.getAttribute('data-theme')==='light' ? 'fas fa-sun' : 'fas fa-moon'; }
+    function syncIcon(){ if(icon) icon.className = document.documentElement.getAttribute('data-theme')==='light' ? 'far fa-sun' : 'fas fa-moon'; }
     syncIcon();
     if(btn) btn.addEventListener('click', function(){
         var l = document.documentElement.getAttribute('data-theme')==='light';
