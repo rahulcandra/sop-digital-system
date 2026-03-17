@@ -841,7 +841,7 @@ if (isset($_SESSION['user_id'])) {
             <input type="text" placeholder="Cari SOP...">
         </div>
         <button class="icon-btn" id="themeToggle" title="Ganti Tema">
-            <i class="fas fa-moon" id="themeIcon"></i>
+            <i class="far fa-moon" id="themeIcon"></i>
         </button>
         <a href="login.php" class="btn-cta-nav">
             <i class="fas fa-arrow-right-to-bracket"></i> Masuk

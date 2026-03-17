@@ -549,7 +549,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </a>
 
     <button class="theme-toggle" id="theme-toggle" title="Ubah Tema">
-        <i class="fas fa-moon"></i>
+        <i class="far fa-moon"></i>
     </button>
 
     <div class="grid-overlay"></div>
