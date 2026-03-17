@@ -2,11 +2,10 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/session.php';
-
 requireLogin();
 
 // ============================================================
-// AJAX: Update Profil
+// AJAX: Update Profil + Foto
 // ============================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_profile') {
     header('Content-Type: application/json');
@@ -18,12 +17,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $chk = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
     $chk->bind_param("si",$email,$user_id); $chk->execute(); $chk->store_result();
     if ($chk->num_rows > 0) { echo json_encode(['success'=>false,'message'=>'Email sudah digunakan akun lain.']); exit; }
-    $upd = $conn->prepare("UPDATE users SET nama_lengkap=?, email=?, username=? WHERE id=?");
-    $upd->bind_param("sssi",$nama_lengkap,$email,$email,$user_id);
-    if ($upd->execute()) { $_SESSION['nama_lengkap']=$nama_lengkap; $_SESSION['email']=$email; echo json_encode(['success'=>true,'message'=>'Profil berhasil diperbarui!','nama'=>$nama_lengkap,'email'=>$email]); }
-    else { echo json_encode(['success'=>false,'message'=>'Gagal menyimpan perubahan.']); }
+
+    $foto_baru = null;
+    if (isset($_FILES['foto_profil']) && $_FILES['foto_profil']['error'] === 0) {
+        $allowed = ['jpg','jpeg','png','webp'];
+        $ext = strtolower(pathinfo($_FILES['foto_profil']['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowed)) { echo json_encode(['success'=>false,'message'=>'Format foto tidak didukung.']); exit; }
+        if ($_FILES['foto_profil']['size'] > 2*1024*1024) { echo json_encode(['success'=>false,'message'=>'Ukuran foto maksimal 2MB.']); exit; }
+        $dir = "../assets/uploads/foto_profil/";
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+        $old = $conn->prepare("SELECT foto_profil FROM users WHERE id=? LIMIT 1");
+        $old->bind_param("i",$user_id); $old->execute(); $old->bind_result($old_foto); $old->fetch(); $old->close();
+        if ($old_foto && file_exists($dir.$old_foto)) unlink($dir.$old_foto);
+        $filename = 'foto_'.$user_id.'_'.time().'.'.$ext;
+        if (move_uploaded_file($_FILES['foto_profil']['tmp_name'], $dir.$filename)) $foto_baru = $filename;
+    }
+
+    if ($foto_baru) {
+        $upd = $conn->prepare("UPDATE users SET nama_lengkap=?, email=?, username=?, foto_profil=? WHERE id=?");
+        $upd->bind_param("ssssi",$nama_lengkap,$email,$email,$foto_baru,$user_id);
+    } else {
+        $upd = $conn->prepare("UPDATE users SET nama_lengkap=?, email=?, username=? WHERE id=?");
+        $upd->bind_param("sssi",$nama_lengkap,$email,$email,$user_id);
+    }
+    if ($upd->execute()) {
+        $_SESSION['nama_lengkap']=$nama_lengkap; $_SESSION['email']=$email;
+        if ($foto_baru) $_SESSION['foto_profil'] = $foto_baru;
+        $foto_url = $foto_baru ? '../assets/uploads/foto_profil/'.$foto_baru.'?t='.time() : null;
+        echo json_encode(['success'=>true,'message'=>'Profil berhasil diperbarui!','nama'=>$nama_lengkap,'email'=>$email,'foto_url'=>$foto_url]);
+    } else { echo json_encode(['success'=>false,'message'=>'Gagal menyimpan perubahan.']); }
     exit;
 }
+
 // ============================================================
 // AJAX: Ubah Password
 // ============================================================
@@ -48,9 +73,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 $sql    = "SELECT c.*, COUNT(s.id) as jumlah_sop FROM categories c LEFT JOIN sop s ON c.id = s.kategori_id GROUP BY c.id ORDER BY c.nama_kategori ASC";
 $result = mysqli_query($conn, $sql);
 
-$cur_nama  = getNamaLengkap();
-$cur_email = $_SESSION['email'] ?? '';
-$cur_init  = strtoupper(substr($cur_nama, 0, 1));
+$cur_nama     = getNamaLengkap();
+$cur_email    = $_SESSION['email'] ?? '';
+$cur_init     = strtoupper(substr($cur_nama, 0, 1));
+$cur_foto     = $_SESSION['foto_profil'] ?? null;
+$cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -79,6 +106,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         }
         *,*::before,*::after{box-sizing:border-box;}
         body{font-family:'Outfit',sans-serif!important;background-color:var(--bg)!important;color:var(--tm)!important;margin:0;overflow-x:hidden;transition:background-color .35s,color .35s;}
+        body.dashboard-page{background:none!important;background-color:var(--bg)!important;}
         body::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(circle at 15% 50%,rgba(59,130,246,.07),transparent 30%);pointer-events:none;}
         .sidebar{background:var(--sb)!important;border-right:1px solid var(--gb)!important;backdrop-filter:blur(12px);}
         .sidebar-header{border-bottom:1px solid var(--gb)!important;padding:20px;}
@@ -93,17 +121,14 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         .topbar-right{display:flex;align-items:center;gap:12px;}
         #theme-toggle-btn{all:unset;cursor:pointer;width:40px;height:40px;border-radius:50%;background:var(--togbg)!important;border:1px solid var(--gb)!important;color:var(--togc)!important;display:flex!important;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.15);flex-shrink:0;transition:all .25s;}
         #theme-toggle-btn:hover{color:#3b82f6!important;transform:scale(1.1);}
-
-        /* USER TRIGGER */
         .user-info-wrap{position:relative;}
         .user-trigger{display:flex;align-items:center;gap:9px;padding:4px 10px 4px 4px;border-radius:10px;cursor:pointer;transition:background .18s;user-select:none;}
         .user-trigger:hover{background:var(--dd-hover);}
-        .user-avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+        .user-avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;overflow:hidden;}
+        .user-avatar img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
         .user-trigger-name{font-size:13px;font-weight:600;color:var(--tm);}
         .user-trigger-chevron{font-size:10px;color:var(--tmut);transition:transform .22s;margin-left:1px;}
         .user-trigger-chevron.open{transform:rotate(180deg);}
-
-        /* DROPDOWN */
         .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;background:var(--dd-bg);border:1px solid var(--dd-sep);border-radius:10px;padding:5px 0;box-shadow:0 10px 40px rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.12);backdrop-filter:blur(24px);opacity:0;pointer-events:none;transform:translateY(-5px) scale(.97);transform-origin:top right;transition:opacity .16s ease,transform .16s ease;z-index:600;}
         .user-dropdown.show{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
         .dd-item{display:block;width:100%;padding:11px 20px;font-size:13.5px;font-weight:500;letter-spacing:.01em;color:var(--dd-text);background:none;border:none;text-align:left;cursor:pointer;text-decoration:none;font-family:'Outfit',sans-serif;transition:background .12s;white-space:nowrap;}
@@ -111,11 +136,9 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         .dd-sep{height:1px;background:var(--dd-sep);margin:3px 0;}
         .dd-item-logout{color:var(--dd-danger)!important;font-weight:600;}
         .dd-item-logout:hover{background:rgba(239,68,68,.07)!important;}
-
-        /* MODAL */
         .modal-overlay{position:fixed;inset:0;z-index:9999;background:rgba(2,6,23,.55);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease;padding:20px;}
         .modal-overlay.show{opacity:1;pointer-events:auto;}
-        .modal-card{background:var(--sb);border:1px solid var(--gb);border-radius:16px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,.38);transform:scale(.96) translateY(14px);transition:transform .22s ease;overflow:hidden;}
+        .modal-card{background:var(--sb);border:1px solid var(--gb);border-radius:16px;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,.38);transform:scale(.96) translateY(14px);transition:transform .22s ease;overflow:hidden;}
         .modal-overlay.show .modal-card{transform:scale(1) translateY(0);}
         .modal-header{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--gb);}
         .modal-icon-wrap{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(139,92,246,.18));border:1px solid rgba(59,130,246,.28);display:flex;align-items:center;justify-content:center;font-size:15px;color:#60a5fa;}
@@ -140,8 +163,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         .mf-btn-save{padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;background:linear-gradient(90deg,#3b82f6,#8b5cf6);color:#fff;border:none;box-shadow:0 4px 12px rgba(59,130,246,.28);transition:.2s;display:flex;align-items:center;gap:6px;}
         .mf-btn-save:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(139,92,246,.36);}
         .mf-btn-save:disabled{opacity:.65;cursor:not-allowed;transform:none;}
-
-        /* page */
+        #fotoPreview:hover{opacity:.85;border-color:rgba(59,130,246,.7)!important;box-shadow:0 0 0 4px rgba(59,130,246,.15);}
         .content-wrapper{padding:24px;}
         .card{background:var(--cb)!important;border:1px solid var(--gb)!important;border-radius:16px!important;box-shadow:0 4px 24px rgba(0,0,0,.10);}
         .card-header{padding:18px 22px;border-bottom:1px solid var(--gb);}
@@ -179,20 +201,24 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
                 <button type="button" id="theme-toggle-btn" title="Ganti Tema">
                     <i class="fas fa-moon" id="theme-icon"></i>
                 </button>
-
-                <!-- USER DROPDOWN -->
                 <div class="user-info-wrap">
                     <div class="user-trigger" id="userTrigger">
-                        <div class="user-avatar" id="topbarAvatar"><?php echo $cur_init; ?></div>
+                        <div class="user-avatar" id="topbarAvatar">
+                            <?php if ($cur_foto_url): ?>
+                                <img src="<?php echo $cur_foto_url; ?>" alt="foto">
+                            <?php else: ?>
+                                <?php echo $cur_init; ?>
+                            <?php endif; ?>
+                        </div>
                         <span class="user-trigger-name" id="topbarNama"><?php echo htmlspecialchars($cur_nama); ?></span>
                         <i class="fas fa-chevron-down user-trigger-chevron" id="userChevron"></i>
                     </div>
                     <div class="user-dropdown" id="userDropdown">
-                        <button class="dd-item" id="openEditProfil">Edit Profil</button>
+                        <button class="dd-item" id="openEditProfil"><i class="fas fa-user-edit" style="margin-right:8px;color:#60a5fa;font-size:12px"></i>Edit Profil</button>
                         <div class="dd-sep"></div>
-                        <button class="dd-item" id="openUbahPassword">Ubah Password</button>
+                        <button class="dd-item" id="openUbahPassword"><i class="fas fa-lock" style="margin-right:8px;color:#a78bfa;font-size:12px"></i>Ubah Password</button>
                         <div class="dd-sep"></div>
-                        <a href="../logout.php" class="dd-item dd-item-logout">Logout</a>
+                        <a href="../logout.php" class="dd-item dd-item-logout"><i class="fas fa-sign-out-alt" style="margin-right:8px;font-size:12px"></i>Logout</a>
                     </div>
                 </div>
             </div>
@@ -238,11 +264,42 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
             <button class="modal-close" data-close="modalEditProfil"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-alert" id="alertEditProfil"></div>
-        <form id="formEditProfil" autocomplete="off">
+        <form id="formEditProfil" autocomplete="off" enctype="multipart/form-data">
             <input type="hidden" name="action" value="update_profile">
             <div class="modal-body">
-                <div class="mf-group"><label>Nama Lengkap</label><div class="mf-wrap"><i class="fas fa-id-card mf-icon"></i><input type="text" name="nama_lengkap" id="editNama" value="<?php echo htmlspecialchars($cur_nama); ?>" placeholder="Nama lengkap" required></div></div>
-                <div class="mf-group"><label>Email <span style="font-size:10px;opacity:.5;text-transform:none;">(juga sebagai username)</span></label><div class="mf-wrap"><i class="fas fa-envelope mf-icon"></i><input type="email" name="email" id="editEmail" value="<?php echo htmlspecialchars($cur_email); ?>" placeholder="email@sinergi.co.id" required></div></div>
+                <div class="mf-group">
+                    <label>Foto Profil</label>
+                    <div style="display:flex;align-items:center;gap:16px;padding:14px;background:var(--togbg);border:1px solid var(--gb);border-radius:12px;">
+                        <label for="inputFoto" style="cursor:pointer;flex-shrink:0;">
+                            <div id="fotoPreview" style="width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;overflow:hidden;border:2px solid rgba(59,130,246,.4);transition:.3s;">
+                                <?php if ($cur_foto_url): ?>
+                                    <img src="<?php echo $cur_foto_url; ?>" style="width:100%;height:100%;object-fit:cover;">
+                                <?php else: ?>
+                                    <?php echo $cur_init; ?>
+                                <?php endif; ?>
+                            </div>
+                        </label>
+                        <div style="flex:1;">
+                            <div style="font-size:13px;font-weight:600;color:var(--tm);margin-bottom:4px;">Ganti Foto</div>
+                            <div style="font-size:11px;color:var(--tmut);margin-bottom:10px;line-height:1.5;">JPG, PNG, WEBP · Maks. 2MB<br>Klik foto untuk memilih gambar</div>
+                            <label for="inputFoto" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:8px;color:#60a5fa;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;font-family:'Outfit',sans-serif;">
+                                <i class="fas fa-image"></i> Pilih Foto
+                            </label>
+                            <input type="file" name="foto_profil" id="inputFoto" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                        </div>
+                    </div>
+                    <div id="fotoNamaFile" style="display:none;margin-top:6px;font-size:11.5px;color:#34d399;align-items:center;gap:6px;">
+                        <i class="fas fa-check-circle"></i><span></span>
+                    </div>
+                </div>
+                <div class="mf-group">
+                    <label>Nama Lengkap</label>
+                    <div class="mf-wrap"><i class="fas fa-id-card mf-icon"></i><input type="text" name="nama_lengkap" id="editNama" value="<?php echo htmlspecialchars($cur_nama); ?>" placeholder="Nama lengkap" required></div>
+                </div>
+                <div class="mf-group">
+                    <label>Email <span style="font-size:10px;opacity:.5;text-transform:none;">(juga sebagai username)</span></label>
+                    <div class="mf-wrap"><i class="fas fa-envelope mf-icon"></i><input type="email" name="email" id="editEmail" value="<?php echo htmlspecialchars($cur_email); ?>" placeholder="email@sinergi.co.id" required></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="mf-btn-cancel" data-close="modalEditProfil">Batal</button>
@@ -300,11 +357,21 @@ document.addEventListener('DOMContentLoaded',function(){
 
     function showAlert(boxId,msg,type){var el=document.getElementById(boxId);el.className='modal-alert '+type;el.innerHTML='<i class="fas '+(type==='success'?'fa-check-circle':'fa-exclamation-circle')+'"></i>&nbsp;'+msg;}
 
+    var inputFoto=document.getElementById('inputFoto');
+    if(inputFoto){inputFoto.addEventListener('change',function(){var file=this.files[0];if(!file)return;var nf=document.getElementById('fotoNamaFile');nf.style.display='flex';nf.querySelector('span').textContent=file.name;var reader=new FileReader();reader.onload=function(e){document.getElementById('fotoPreview').innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;">';};reader.readAsDataURL(file);});}
+
     document.getElementById('formEditProfil').addEventListener('submit',function(e){
         e.preventDefault();var sb=document.getElementById('btnSaveProfil');sb.disabled=true;sb.innerHTML='<i class="fas fa-circle-notch fa-spin"></i> Menyimpan...';
         fetch(window.location.href,{method:'POST',body:new FormData(this)}).then(function(r){return r.json();}).then(function(res){
             showAlert('alertEditProfil',res.message,res.success?'success':'error');
-            if(res.success){var init=res.nama.charAt(0).toUpperCase();var ta=document.getElementById('topbarAvatar');if(ta)ta.textContent=init;var tn=document.getElementById('topbarNama');if(tn)tn.textContent=res.nama;document.getElementById('editNama').value=res.nama;document.getElementById('editEmail').value=res.email;setTimeout(function(){closeModal('modalEditProfil');},1500);}
+            if(res.success){
+                var ta=document.getElementById('topbarAvatar');
+                if(ta){if(res.foto_url){ta.innerHTML='<img src="'+res.foto_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';}else{ta.textContent=res.nama.charAt(0).toUpperCase();}}
+                var tn=document.getElementById('topbarNama');if(tn)tn.textContent=res.nama;
+                document.getElementById('editNama').value=res.nama;document.getElementById('editEmail').value=res.email;
+                var nf=document.getElementById('fotoNamaFile');if(nf)nf.style.display='none';
+                setTimeout(function(){closeModal('modalEditProfil');},1500);
+            }
         }).catch(function(){showAlert('alertEditProfil','Kesalahan jaringan.','error');}).finally(function(){sb.disabled=false;sb.innerHTML='<i class="fas fa-save"></i> Simpan';});
     });
     document.getElementById('formUbahPassword').addEventListener('submit',function(e){

@@ -5,7 +5,7 @@ require_once '../includes/session.php';
 requireUser();
 
 // ============================================================
-// AJAX: Update Profil
+// AJAX: Update Profil + Foto
 // ============================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_profile') {
     header('Content-Type: application/json');
@@ -17,18 +17,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $chk = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
     $chk->bind_param("si",$email,$user_id); $chk->execute(); $chk->store_result();
     if ($chk->num_rows > 0) { echo json_encode(['success'=>false,'message'=>'Email sudah digunakan akun lain.']); exit; }
-    $upd = $conn->prepare("UPDATE users SET nama_lengkap=?, email=?, username=? WHERE id=?");
-    $upd->bind_param("sssi",$nama_lengkap,$email,$email,$user_id);
-    if ($upd->execute()) { $_SESSION['nama_lengkap']=$nama_lengkap; $_SESSION['email']=$email; echo json_encode(['success'=>true,'message'=>'Profil berhasil diperbarui!','nama'=>$nama_lengkap,'email'=>$email]); }
-    else { echo json_encode(['success'=>false,'message'=>'Gagal menyimpan perubahan.']); }
+
+    $foto_baru = null;
+    if (isset($_FILES['foto_profil']) && $_FILES['foto_profil']['error'] === 0) {
+        $allowed = ['jpg','jpeg','png','webp'];
+        $ext = strtolower(pathinfo($_FILES['foto_profil']['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowed)) { echo json_encode(['success'=>false,'message'=>'Format foto tidak didukung.']); exit; }
+        if ($_FILES['foto_profil']['size'] > 2*1024*1024) { echo json_encode(['success'=>false,'message'=>'Ukuran foto maksimal 2MB.']); exit; }
+        $dir = "../assets/uploads/foto_profil/";
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+        $old = $conn->prepare("SELECT foto_profil FROM users WHERE id=? LIMIT 1");
+        $old->bind_param("i",$user_id); $old->execute(); $old->bind_result($old_foto); $old->fetch(); $old->close();
+        if ($old_foto && file_exists($dir.$old_foto)) unlink($dir.$old_foto);
+        $filename = 'foto_'.$user_id.'_'.time().'.'.$ext;
+        if (move_uploaded_file($_FILES['foto_profil']['tmp_name'], $dir.$filename)) $foto_baru = $filename;
+    }
+
+    if ($foto_baru) {
+        $upd = $conn->prepare("UPDATE users SET nama_lengkap=?, email=?, username=?, foto_profil=? WHERE id=?");
+        $upd->bind_param("ssssi",$nama_lengkap,$email,$email,$foto_baru,$user_id);
+    } else {
+        $upd = $conn->prepare("UPDATE users SET nama_lengkap=?, email=?, username=? WHERE id=?");
+        $upd->bind_param("sssi",$nama_lengkap,$email,$email,$user_id);
+    }
+    if ($upd->execute()) {
+        $_SESSION['nama_lengkap']=$nama_lengkap; $_SESSION['email']=$email;
+        if ($foto_baru) $_SESSION['foto_profil'] = $foto_baru;
+        $foto_url = $foto_baru ? '../assets/uploads/foto_profil/'.$foto_baru.'?t='.time() : null;
+        echo json_encode(['success'=>true,'message'=>'Profil berhasil diperbarui!','nama'=>$nama_lengkap,'email'=>$email,'foto_url'=>$foto_url]);
+    } else { echo json_encode(['success'=>false,'message'=>'Gagal menyimpan perubahan.']); }
     exit;
 }
+
 // ============================================================
 // AJAX: Ubah Password
 // ============================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_password') {
     header('Content-Type: application/json');
-    $user_id=$getUserId=getUserId();
+    $user_id=getUserId();
     $old=$_POST['old_password']??''; $new=$_POST['new_password']??''; $conf=$_POST['conf_password']??'';
     if (empty($old)||empty($new)||empty($conf)) { echo json_encode(['success'=>false,'message'=>'Semua field wajib diisi.']); exit; }
     if (strlen($new)<6) { echo json_encode(['success'=>false,'message'=>'Password baru minimal 6 karakter.']); exit; }
@@ -52,12 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     $desk  = mysqli_real_escape_string($conn, trim($_POST['deskripsi']));
     $lk    = mysqli_real_escape_string($conn, trim($_POST['langkah_kerja']));
     $st    = 'Review'; $cb = $user_id; $fa = '';
-
-    // Validasi sisi server
     if (empty($judul) || empty($lk) || $kid == 0) { setFlashMessage('danger','Field wajib tidak boleh kosong!'); header('Location: browse_sop.php'); exit(); }
     if (strlen($judul) < 5) { setFlashMessage('danger','Judul minimal 5 karakter.'); header('Location: browse_sop.php'); exit(); }
     if (strlen($lk) < 20) { setFlashMessage('danger','Langkah kerja minimal 20 karakter.'); header('Location: browse_sop.php'); exit(); }
-
     if (isset($_FILES['file_attachment']) && $_FILES['file_attachment']['error'] == 0) {
         $dir = "../assets/uploads/";
         $ext = pathinfo($_FILES['file_attachment']['name'], PATHINFO_EXTENSION);
@@ -79,9 +102,11 @@ $result     = mysqli_query($conn,"SELECT s.*,c.nama_kategori FROM sop s LEFT JOI
 $result_cat = mysqli_query($conn,"SELECT * FROM categories ORDER BY nama_kategori ASC");
 $flash      = getFlashMessage();
 
-$cur_nama  = getNamaLengkap();
-$cur_email = $_SESSION['email'] ?? '';
-$cur_init  = strtoupper(substr($cur_nama, 0, 1));
+$cur_nama     = getNamaLengkap();
+$cur_email    = $_SESSION['email'] ?? '';
+$cur_init     = strtoupper(substr($cur_nama, 0, 1));
+$cur_foto     = $_SESSION['foto_profil'] ?? null;
+$cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -112,6 +137,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         }
         *,*::before,*::after{box-sizing:border-box;}
         body{font-family:'Outfit',sans-serif!important;background-color:var(--bg)!important;color:var(--tm)!important;margin:0;overflow-x:hidden;transition:background-color .35s,color .35s;}
+        body.dashboard-page{background:none!important;background-color:var(--bg)!important;}
         body::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(circle at 15% 50%,rgba(59,130,246,.07),transparent 30%);pointer-events:none;}
         .sidebar{background:var(--sb)!important;border-right:1px solid var(--gb)!important;backdrop-filter:blur(12px);}
         .sidebar-header{border-bottom:1px solid var(--gb)!important;padding:20px;}
@@ -125,17 +151,14 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         .topbar-right{display:flex;align-items:center;gap:12px;}
         #theme-toggle-btn{all:unset;cursor:pointer;width:40px;height:40px;border-radius:50%;background:var(--togbg)!important;border:1px solid var(--gb)!important;color:var(--togc)!important;display:flex!important;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.15);flex-shrink:0;transition:all .25s;}
         #theme-toggle-btn:hover{color:#3b82f6!important;transform:scale(1.1);}
-
-        /* USER TRIGGER */
         .user-info-wrap{position:relative;}
         .user-trigger{display:flex;align-items:center;gap:9px;padding:4px 10px 4px 4px;border-radius:10px;cursor:pointer;transition:background .18s;user-select:none;}
         .user-trigger:hover{background:var(--dd-hover);}
-        .user-avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+        .user-avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;overflow:hidden;}
+        .user-avatar img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
         .user-trigger-name{font-size:13px;font-weight:600;color:var(--tm);}
         .user-trigger-chevron{font-size:10px;color:var(--tmut);transition:transform .22s;margin-left:1px;}
         .user-trigger-chevron.open{transform:rotate(180deg);}
-
-        /* DROPDOWN */
         .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;background:var(--dd-bg);border:1px solid var(--dd-sep);border-radius:10px;padding:5px 0;box-shadow:0 10px 40px rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.12);backdrop-filter:blur(24px);opacity:0;pointer-events:none;transform:translateY(-5px) scale(.97);transform-origin:top right;transition:opacity .16s ease,transform .16s ease;z-index:600;}
         .user-dropdown.show{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
         .dd-item{display:block;width:100%;padding:11px 20px;font-size:13.5px;font-weight:500;letter-spacing:.01em;color:var(--dd-text);background:none;border:none;text-align:left;cursor:pointer;text-decoration:none;font-family:'Outfit',sans-serif;transition:background .12s;white-space:nowrap;}
@@ -143,11 +166,9 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         .dd-sep{height:1px;background:var(--dd-sep);margin:3px 0;}
         .dd-item-logout{color:var(--dd-danger)!important;font-weight:600;}
         .dd-item-logout:hover{background:rgba(239,68,68,.07)!important;}
-
-        /* MODAL */
         .modal-overlay{position:fixed;inset:0;z-index:9999;background:rgba(2,6,23,.55);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease;padding:20px;}
         .modal-overlay.show{opacity:1;pointer-events:auto;}
-        .modal-card{background:var(--sb);border:1px solid var(--gb);border-radius:16px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,.38);transform:scale(.96) translateY(14px);transition:transform .22s ease;overflow:hidden;}
+        .modal-card{background:var(--sb);border:1px solid var(--gb);border-radius:16px;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,.38);transform:scale(.96) translateY(14px);transition:transform .22s ease;overflow:hidden;}
         .modal-overlay.show .modal-card{transform:scale(1) translateY(0);}
         .modal-header{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--gb);}
         .modal-icon-wrap{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(139,92,246,.18));border:1px solid rgba(59,130,246,.28);display:flex;align-items:center;justify-content:center;font-size:15px;color:#60a5fa;}
@@ -172,8 +193,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         .mf-btn-save{padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;background:linear-gradient(90deg,#3b82f6,#8b5cf6);color:#fff;border:none;box-shadow:0 4px 12px rgba(59,130,246,.28);transition:.2s;display:flex;align-items:center;gap:6px;}
         .mf-btn-save:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(139,92,246,.36);}
         .mf-btn-save:disabled{opacity:.65;cursor:not-allowed;transform:none;}
-
-        /* page content */
+        #fotoPreview:hover{opacity:.85;border-color:rgba(59,130,246,.7)!important;box-shadow:0 0 0 4px rgba(59,130,246,.15);}
         .content-wrapper{padding:24px;}
         .card{background:var(--cb)!important;border:1px solid var(--gb)!important;border-radius:16px!important;box-shadow:0 4px 24px rgba(0,0,0,.10);margin-bottom:24px;}
         .card-header{padding:18px 22px;border-bottom:1px solid var(--gb);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
@@ -204,8 +224,6 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         .sop-meta small{color:var(--tmut);}
         .empty-state{text-align:center;padding:60px 20px;color:var(--tmut);}
         .empty-state h3{color:var(--tm);margin-top:10px;}
-
-        /* SOP Modal */
         .sop-modal{display:none;position:fixed;z-index:8000;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);}
         .sop-modal-content{background:var(--mbg)!important;border:1px solid var(--mbor)!important;border-radius:16px;width:90%;max-width:700px;margin:3% auto;box-shadow:0 20px 50px rgba(0,0,0,.4);max-height:92vh;overflow-y:auto;}
         .sop-modal-header{padding:16px 22px;border-bottom:1px solid var(--mbor);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--mbg);z-index:2;border-radius:16px 16px 0 0;}
@@ -221,19 +239,8 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
         .field-hint{font-size:11.5px;color:var(--tmut);margin-top:5px;line-height:1.5;display:flex;align-items:flex-start;gap:5px;}
         .field-hint i{font-size:11px;margin-top:2px;flex-shrink:0;}
         .field-hint.blue i{color:#60a5fa;}
-        .field-hint.yellow i{color:#f59e0b;}
-        /* NEW: Field error style */
-        .field-error {
-            color: #ef4444;
-            font-size: 11px;
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .field-error i {
-            font-size: 10px;
-        }
+        .field-error{color:#ef4444;font-size:11px;margin-top:4px;display:flex;align-items:center;gap:4px;}
+        .field-error i{font-size:10px;}
         .warn-banner{display:flex;gap:11px;align-items:flex-start;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:12px 14px;margin-bottom:18px;}
         .warn-banner .wi{color:#f59e0b;font-size:14px;margin-top:2px;flex-shrink:0;}
         .warn-banner .wt{font-size:12px;color:#fbbf24;line-height:1.65;}
@@ -273,20 +280,24 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
                 <button type="button" id="theme-toggle-btn" title="Ganti Tema">
                     <i class="fas fa-moon" id="theme-icon"></i>
                 </button>
-
-                <!-- USER DROPDOWN -->
                 <div class="user-info-wrap">
                     <div class="user-trigger" id="userTrigger">
-                        <div class="user-avatar" id="topbarAvatar"><?php echo $cur_init; ?></div>
+                        <div class="user-avatar" id="topbarAvatar">
+                            <?php if ($cur_foto_url): ?>
+                                <img src="<?php echo $cur_foto_url; ?>" alt="foto">
+                            <?php else: ?>
+                                <?php echo $cur_init; ?>
+                            <?php endif; ?>
+                        </div>
                         <span class="user-trigger-name" id="topbarNama"><?php echo htmlspecialchars($cur_nama); ?></span>
                         <i class="fas fa-chevron-down user-trigger-chevron" id="userChevron"></i>
                     </div>
                     <div class="user-dropdown" id="userDropdown">
-                        <button class="dd-item" id="openEditProfil">Edit Profil</button>
+                        <button class="dd-item" id="openEditProfil"><i class="fas fa-user-edit" style="margin-right:8px;color:#60a5fa;font-size:12px"></i>Edit Profil</button>
                         <div class="dd-sep"></div>
-                        <button class="dd-item" id="openUbahPassword">Ubah Password</button>
+                        <button class="dd-item" id="openUbahPassword"><i class="fas fa-lock" style="margin-right:8px;color:#a78bfa;font-size:12px"></i>Ubah Password</button>
                         <div class="dd-sep"></div>
-                        <a href="../logout.php" class="dd-item dd-item-logout">Logout</a>
+                        <a href="../logout.php" class="dd-item dd-item-logout"><i class="fas fa-sign-out-alt" style="margin-right:8px;font-size:12px"></i>Logout</a>
                     </div>
                 </div>
             </div>
@@ -384,9 +395,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
                             <span class="badge-req">Wajib di isi!</span>
                         </div>
                         <input type="text" name="judul" id="add_judul" class="form-control" placeholder="Contoh: SOP Pengajuan Cuti" required>
-                        <div class="field-error" id="error-judul" style="display: none;">
-                            <i class="fas fa-exclamation-circle"></i> <span></span>
-                        </div>
+                        <div class="field-error" id="error-judul" style="display:none;"><i class="fas fa-exclamation-circle"></i> <span></span></div>
                     </div>
                     <div class="form-group" style="margin-bottom:0">
                         <div class="form-row-label">
@@ -399,9 +408,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
                             <option value="<?php echo $cat['id']; ?>"><?php echo htmlspecialchars($cat['nama_kategori']); ?></option>
                             <?php endwhile; ?>
                         </select>
-                        <div class="field-error" id="error-kategori" style="display: none;">
-                            <i class="fas fa-exclamation-circle"></i> <span></span>
-                        </div>
+                        <div class="field-error" id="error-kategori" style="display:none;"><i class="fas fa-exclamation-circle"></i> <span></span></div>
                     </div>
                 </div>
                 <div class="form-group" style="margin-top:14px">
@@ -425,9 +432,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
                         </ol>
                     </div>
                     <textarea name="langkah_kerja" id="add_langkah" class="form-control" rows="7" required placeholder="Silahkan isi langkah-langkah dalam pembuatan SOP ini..."></textarea>
-                    <div class="field-error" id="error-langkah" style="display: none;">
-                        <i class="fas fa-exclamation-circle"></i> <span></span>
-                    </div>
+                    <div class="field-error" id="error-langkah" style="display:none;"><i class="fas fa-exclamation-circle"></i> <span></span></div>
                 </div>
                 <div class="form-group">
                     <div class="form-row-label">
@@ -440,7 +445,7 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
                 <div class="confirm-box">
                     <label>
                         <input type="checkbox" id="confirmSOP">
-                        <span class="confirm-text"><strong>Saya menyatakan SOP ini belum tersedia sistem, ditulis lengkap dan akurat serta siap untuk di-review oleh Admin.</strong>
+                        <span class="confirm-text"><strong>Saya menyatakan SOP ini belum tersedia sistem, ditulis lengkap dan akurat serta siap untuk di-review oleh Admin.</strong></span>
                     </label>
                 </div>
                 <div class="form-actions">
@@ -461,9 +466,34 @@ $cur_init  = strtoupper(substr($cur_nama, 0, 1));
             <button class="modal-close" data-close="modalEditProfil"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-alert" id="alertEditProfil"></div>
-        <form id="formEditProfil" autocomplete="off">
+        <form id="formEditProfil" autocomplete="off" enctype="multipart/form-data">
             <input type="hidden" name="action" value="update_profile">
             <div class="modal-body">
+                <div class="mf-group">
+                    <label>Foto Profil</label>
+                    <div style="display:flex;align-items:center;gap:16px;padding:14px;background:var(--togbg);border:1px solid var(--gb);border-radius:12px;">
+                        <label for="inputFoto" style="cursor:pointer;flex-shrink:0;">
+                            <div id="fotoPreview" style="width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;overflow:hidden;border:2px solid rgba(59,130,246,.4);transition:.3s;">
+                                <?php if ($cur_foto_url): ?>
+                                    <img src="<?php echo $cur_foto_url; ?>" style="width:100%;height:100%;object-fit:cover;">
+                                <?php else: ?>
+                                    <?php echo $cur_init; ?>
+                                <?php endif; ?>
+                            </div>
+                        </label>
+                        <div style="flex:1;">
+                            <div style="font-size:13px;font-weight:600;color:var(--tm);margin-bottom:4px;">Ganti Foto</div>
+                            <div style="font-size:11px;color:var(--tmut);margin-bottom:10px;line-height:1.5;">JPG, PNG, WEBP · Maks. 2MB<br>Klik foto untuk memilih gambar</div>
+                            <label for="inputFoto" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:8px;color:#60a5fa;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;font-family:'Outfit',sans-serif;">
+                                <i class="fas fa-image"></i> Pilih Foto
+                            </label>
+                            <input type="file" name="foto_profil" id="inputFoto" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                        </div>
+                    </div>
+                    <div id="fotoNamaFile" style="display:none;margin-top:6px;font-size:11.5px;color:#34d399;align-items:center;gap:6px;">
+                        <i class="fas fa-check-circle"></i><span></span>
+                    </div>
+                </div>
                 <div class="mf-group">
                     <label>Nama Lengkap</label>
                     <div class="mf-wrap"><i class="fas fa-id-card mf-icon"></i><input type="text" name="nama_lengkap" id="editNama" value="<?php echo htmlspecialchars($cur_nama); ?>" placeholder="Nama lengkap" required></div>
@@ -515,12 +545,10 @@ document.addEventListener('DOMContentLoaded',function(){
     sync();
     if(btn)btn.addEventListener('click',function(){var l=document.documentElement.getAttribute('data-theme')==='light';if(l){document.documentElement.removeAttribute('data-theme');localStorage.setItem('theme','dark');}else{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('theme','light');}sync();});
 
-    // dropdown
     var trigger=document.getElementById('userTrigger'),dropdown=document.getElementById('userDropdown'),chevron=document.getElementById('userChevron');
     trigger.addEventListener('click',function(e){e.stopPropagation();var o=dropdown.classList.toggle('show');chevron.classList.toggle('open',o);});
     document.addEventListener('click',function(e){if(!dropdown.contains(e.target)&&!trigger.contains(e.target)){dropdown.classList.remove('show');chevron.classList.remove('open');}});
 
-    // modal
     function openModal(id){document.getElementById(id).classList.add('show');dropdown.classList.remove('show');chevron.classList.remove('open');var a=document.querySelector('#'+id+' .modal-alert');if(a)a.className='modal-alert';}
     function closeModal(id){document.getElementById(id).classList.remove('show');}
     document.getElementById('openEditProfil').addEventListener('click',function(){openModal('modalEditProfil');});
@@ -531,13 +559,27 @@ document.addEventListener('DOMContentLoaded',function(){
 
     function showAlert(boxId,msg,type){var el=document.getElementById(boxId);el.className='modal-alert '+type;el.innerHTML='<i class="fas '+(type==='success'?'fa-check-circle':'fa-exclamation-circle')+'"></i>&nbsp;'+msg;}
 
+    // Preview foto
+    var inputFoto=document.getElementById('inputFoto');
+    if(inputFoto){inputFoto.addEventListener('change',function(){var file=this.files[0];if(!file)return;var nf=document.getElementById('fotoNamaFile');nf.style.display='flex';nf.querySelector('span').textContent=file.name;var reader=new FileReader();reader.onload=function(e){document.getElementById('fotoPreview').innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;">';};reader.readAsDataURL(file);});}
+
+    // Edit Profil
     document.getElementById('formEditProfil').addEventListener('submit',function(e){
         e.preventDefault();var sb=document.getElementById('btnSaveProfil');sb.disabled=true;sb.innerHTML='<i class="fas fa-circle-notch fa-spin"></i> Menyimpan...';
         fetch(window.location.href,{method:'POST',body:new FormData(this)}).then(function(r){return r.json();}).then(function(res){
             showAlert('alertEditProfil',res.message,res.success?'success':'error');
-            if(res.success){var init=res.nama.charAt(0).toUpperCase();var ta=document.getElementById('topbarAvatar');if(ta)ta.textContent=init;var tn=document.getElementById('topbarNama');if(tn)tn.textContent=res.nama;document.getElementById('editNama').value=res.nama;document.getElementById('editEmail').value=res.email;setTimeout(function(){closeModal('modalEditProfil');},1500);}
+            if(res.success){
+                var ta=document.getElementById('topbarAvatar');
+                if(ta){if(res.foto_url){ta.innerHTML='<img src="'+res.foto_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';}else{ta.textContent=res.nama.charAt(0).toUpperCase();}}
+                var tn=document.getElementById('topbarNama');if(tn)tn.textContent=res.nama;
+                document.getElementById('editNama').value=res.nama;document.getElementById('editEmail').value=res.email;
+                var nf=document.getElementById('fotoNamaFile');if(nf)nf.style.display='none';
+                setTimeout(function(){closeModal('modalEditProfil');},1500);
+            }
         }).catch(function(){showAlert('alertEditProfil','Kesalahan jaringan.','error');}).finally(function(){sb.disabled=false;sb.innerHTML='<i class="fas fa-save"></i> Simpan';});
     });
+
+    // Ubah Password
     document.getElementById('formUbahPassword').addEventListener('submit',function(e){
         e.preventDefault();var np=document.getElementById('newPass').value,cp=document.getElementById('confPass').value;
         if(np!==cp){showAlert('alertUbahPassword','Konfirmasi password tidak cocok.','error');return;}
@@ -548,74 +590,21 @@ document.addEventListener('DOMContentLoaded',function(){
         }).catch(function(){showAlert('alertUbahPassword','Kesalahan jaringan.','error');}).finally(function(){sb.disabled=false;sb.innerHTML='<i class="fas fa-key"></i> Ubah Password';});
     });
 
-    // === VALIDATION FOR SOP SUBMISSION FORM ===
-    const addJudul = document.getElementById('add_judul');
-    const addKategori = document.getElementById('add_kategori');
-    const addLangkah = document.getElementById('add_langkah');
-    const errorJudul = document.getElementById('error-judul');
-    const errorKategori = document.getElementById('error-kategori');
-    const errorLangkah = document.getElementById('error-langkah');
-    const chkSOP = document.getElementById('confirmSOP');
-    const btnAjukan = document.getElementById('btnAjukan');
-    const sopForm = document.getElementById('formAjukanSOP');
-
-    function validateAddForm() {
-        let isValid = true;
-
-        // Judul
-        const judulVal = addJudul.value.trim();
-        if (judulVal.length < 5) {
-            errorJudul.style.display = 'flex';
-            errorJudul.querySelector('span').textContent = 'Judul minimal 5 karakter.';
-            isValid = false;
-        } else {
-            errorJudul.style.display = 'none';
-        }
-
-        // Kategori
-        if (!addKategori.value) {
-            errorKategori.style.display = 'flex';
-            errorKategori.querySelector('span').textContent = 'Pilih kategori yang cocok dengan judul SOP anda.';
-            isValid = false;
-        } else {
-            errorKategori.style.display = 'none';
-        }
-
-        // Langkah kerja
-        const langkahVal = addLangkah.value.trim();
-        if (langkahVal.length < 20) {
-            errorLangkah.style.display = 'flex';
-            errorLangkah.querySelector('span').textContent = 'Langkah kerja minimal 20 karakter.';
-            isValid = false;
-        } else {
-            errorLangkah.style.display = 'none';
-        }
-
-        return isValid;
+    // Validasi SOP
+    var addJudul=document.getElementById('add_judul'),addKategori=document.getElementById('add_kategori'),addLangkah=document.getElementById('add_langkah');
+    var errorJudul=document.getElementById('error-judul'),errorKategori=document.getElementById('error-kategori'),errorLangkah=document.getElementById('error-langkah');
+    var chkSOP=document.getElementById('confirmSOP'),btnAjukan=document.getElementById('btnAjukan');
+    function validateAddForm(){
+        var ok=true;
+        if(addJudul.value.trim().length<5){errorJudul.style.display='flex';errorJudul.querySelector('span').textContent='Judul minimal 5 karakter.';ok=false;}else{errorJudul.style.display='none';}
+        if(!addKategori.value){errorKategori.style.display='flex';errorKategori.querySelector('span').textContent='Pilih kategori yang cocok.';ok=false;}else{errorKategori.style.display='none';}
+        if(addLangkah.value.trim().length<20){errorLangkah.style.display='flex';errorLangkah.querySelector('span').textContent='Langkah kerja minimal 20 karakter.';ok=false;}else{errorLangkah.style.display='none';}
+        return ok;
     }
-
-    function updateSubmitButton() {
-        const valid = validateAddForm();
-        const enabled = chkSOP.checked && valid;
-        btnAjukan.disabled = !enabled;
-        btnAjukan.style.opacity = enabled ? '1' : '.45';
-        btnAjukan.style.cursor = enabled ? 'pointer' : 'not-allowed';
-    }
-
-    addJudul.addEventListener('input', updateSubmitButton);
-    addKategori.addEventListener('change', updateSubmitButton);
-    addLangkah.addEventListener('input', updateSubmitButton);
-    chkSOP.addEventListener('change', updateSubmitButton);
-    updateSubmitButton(); // initial state
-
-    sopForm.addEventListener('submit', function(e) {
-        if (!validateAddForm() || !chkSOP.checked) {
-            e.preventDefault();
-            alert('Harap periksa kembali: pastikan judul minimal 5 karakter, kategori dipilih, langkah kerja minimal 20 karakter, dan konfirmasi telah dicentang.');
-            return false;
-        }
-    });
-
+    function updateSubmitButton(){var enabled=chkSOP.checked&&validateAddForm();btnAjukan.disabled=!enabled;btnAjukan.style.opacity=enabled?'1':'.45';btnAjukan.style.cursor=enabled?'pointer':'not-allowed';}
+    addJudul.addEventListener('input',updateSubmitButton);addKategori.addEventListener('change',updateSubmitButton);addLangkah.addEventListener('input',updateSubmitButton);chkSOP.addEventListener('change',updateSubmitButton);
+    updateSubmitButton();
+    document.getElementById('formAjukanSOP').addEventListener('submit',function(e){if(!validateAddForm()||!chkSOP.checked){e.preventDefault();return false;}});
 });
 function openSopModal(id){document.getElementById(id).style.display='block';}
 function closeSopModal(id){document.getElementById(id).style.display='none';}
