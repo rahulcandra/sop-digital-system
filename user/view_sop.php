@@ -196,6 +196,32 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
         .section-title{color:var(--tm);margin-top:0;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-size:18px;font-weight:600;}
         .section-box p{color:var(--tsub);line-height:1.6;margin:0;font-size:15px;}
         .section-box pre{font-family:'Outfit',sans-serif;white-space:pre-wrap;margin:0;line-height:1.6;font-size:15px;color:var(--tsub);}
+    
+        /* NUCLEAR FIX */
+        html, body { height: auto !important; min-height: 0 !important; }
+        .dashboard-wrapper {
+        display: flex !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+        align-items: stretch !important;
+        }
+        .sidebar {
+        width: 260px !important;
+        flex-shrink: 0 !important;
+        position: sticky !important;
+        top: 0 !important;
+        height: 100vh !important;
+        overflow-y: auto !important;
+        margin-left: 0 !important;
+        }
+        .main-content {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        min-height: unset !important;
+        height: auto !important;
+        margin-left: 0 !important;
+        background: transparent !important;
+        }
     </style>
 </head>
 <body class="dashboard-page">

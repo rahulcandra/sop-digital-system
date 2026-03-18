@@ -348,6 +348,32 @@ $greeting_icon = $hour < 12 ? '🌅' : ($hour < 17 ? '☀️' : ($hour < 20 ? '�
         .revisi-alert-text span{font-size:12.5px;color:var(--tmut);}
 
         @media(max-width:768px){.stats-grid{grid-template-columns:1fr 1fr;}}
+
+        /* NUCLEAR FIX */
+        html, body { height: auto !important; min-height: 0 !important; }
+        .dashboard-wrapper {
+        display: flex !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+        align-items: stretch !important;
+        }
+        .sidebar {
+        width: 260px !important;
+        flex-shrink: 0 !important;
+        position: sticky !important;
+        top: 0 !important;
+        height: 100vh !important;
+        overflow-y: auto !important;
+        margin-left: 0 !important;
+        }
+        .main-content {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        min-height: unset !important;
+        height: auto !important;
+        margin-left: 0 !important;
+        background: transparent !important;
+        }
     </style>
 </head>
 <body class="dashboard-page">

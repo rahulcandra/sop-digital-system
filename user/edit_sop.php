@@ -108,6 +108,32 @@ $flash = getFlashMessage();
         #theme-toggle-btn { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: var(--togbg) !important; border: 1px solid var(--gb) !important; color: var(--togc) !important; display: flex !important; align-items: center; justify-content: center; font-size: 17px; transition: all .25s; }
         
         .catatan-revisi { background: var(--lbg); border: 1px solid var(--lbor); color: var(--lc); padding: 15px; border-radius: 12px; margin-bottom: 25px; }
+    
+        /* NUCLEAR FIX */
+        html, body { height: auto !important; min-height: 0 !important; }
+        .dashboard-wrapper {
+        display: flex !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+        align-items: stretch !important;
+        }
+        .sidebar {
+        width: 260px !important;
+        flex-shrink: 0 !important;
+        position: sticky !important;
+        top: 0 !important;
+        height: 100vh !important;
+        overflow-y: auto !important;
+        margin-left: 0 !important;
+        }
+        .main-content {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        min-height: unset !important;
+        height: auto !important;
+        margin-left: 0 !important;
+        background: transparent !important;
+        }
     </style>
 </head>
 <body class="dashboard-page">
