@@ -288,6 +288,12 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
                     </div>
                 </div>
                 <div class="card-body">
+                    <?php if (!empty($sop['nomor_dokumen'])): ?>
+                <div style="grid-column:1/-1;">
+                    <p class="meta-label">Nomor Dokumen</p>
+                    <p class="meta-value" style="font-family:monospace;color:#60a5fa;font-size:16px;"><?php echo htmlspecialchars($sop['nomor_dokumen']); ?></p>
+                </div>
+                <?php endif; ?>
                     <div class="meta-grid">
                         <div><p class="meta-label">Dibuat oleh</p><p class="meta-value"><?php echo htmlspecialchars($sop['creator'] ?? 'Sistem'); ?></p></div>
                         <div><p class="meta-label">Tanggal Dibuat</p><p class="meta-value"><?php echo date('d F Y, H:i', strtotime($sop['created_at'])); ?> WIB</p></div>

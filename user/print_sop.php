@@ -408,7 +408,9 @@ $qr_api_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=0
                 </td>
             </tr>
             <tr>
-                <td class="text-bold" style="font-size: 14px;">SOP-<?php echo str_pad($sop['id'], 4, '0', STR_PAD_LEFT); ?></td>
+                <td class="text-bold" style="font-size: 14px;">
+            <?php echo !empty($sop['nomor_dokumen']) ? htmlspecialchars($sop['nomor_dokumen']) : 'SOP-'.str_pad($sop['id'], 4, '0', STR_PAD_LEFT); ?>
+                </td>
             </tr>
             <tr>
                 <td class="text-sm">Tgl. Berlaku: <strong><?php echo date('d/m/Y', strtotime($sop['created_at'])); ?></strong></td>

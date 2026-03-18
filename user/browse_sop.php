@@ -369,12 +369,19 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
                         while($row=mysqli_fetch_assoc($result)):
                             $s=trim($row['status']); $style=$ss[$s]??$ss['Revisi'];
                         ?>
-                        <div class="sop-card">
-                            <div style="margin-bottom:10px">
-                                <span class="badge"><?php echo htmlspecialchars($row['nama_kategori']); ?></span>
-                                <span class="s-badge" style="<?php echo $style; ?>"><?php echo htmlspecialchars($s); ?></span>
-                            </div>
-                            <h4><?php echo htmlspecialchars($row['judul']); ?></h4>
+            <div class="sop-card">
+                <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                    <span class="badge"><?php echo htmlspecialchars($row['nama_kategori']); ?></span>
+                    <span class="s-badge" style="<?php echo $style; ?>"><?php echo htmlspecialchars($s); ?></span>
+                </div>
+                    <?php if (!empty($row['nomor_dokumen'])): ?>
+                <div style="margin-bottom:8px;">
+                    <span style="font-family:monospace;font-size:11px;font-weight:700;color:#60a5fa;background:rgba(59,130,246,.1);padding:3px 8px;border-radius:6px;border:1px solid rgba(59,130,246,.2);">
+                        <i class="fas fa-hashtag" style="font-size:9px;margin-right:3px;"></i><?php echo htmlspecialchars($row['nomor_dokumen']); ?>
+                    </span>
+                </div>
+                <?php endif; ?>
+                    <h4><?php echo htmlspecialchars($row['judul']); ?></h4>
                             <p><?php echo substr(htmlspecialchars($row['deskripsi']),0,100).'...'; ?></p>
                             <div class="sop-meta">
                                 <small><i class="fas fa-calendar"></i> <?php echo date('d/m/Y',strtotime($row['created_at'])); ?></small>
