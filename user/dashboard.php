@@ -317,13 +317,14 @@ $greeting_icon = $hour < 12 ? '🌅' : ($hour < 17 ? '☀️' : ($hour < 20 ? '�
         /* TABLE */
         .table-responsive{overflow-x:auto;border-radius:10px;overflow:hidden;}
         table{width:100%!important;border-collapse:collapse!important;}
-        thead tr{background:rgba(59,130,246,.12)!important;}
-        [data-theme="light"] thead tr{background:rgba(59,130,246,.07)!important;}
-        thead th{color:#94a3b8!important;padding:12px 16px!important;font-size:.72rem!important;font-weight:600!important;text-transform:uppercase!important;letter-spacing:.6px!important;border:none!important;text-align:left;}
-        tbody tr:nth-child(odd) td{background:rgba(30,42,70,.45)!important;}
-        tbody tr:nth-child(even) td{background:rgba(22,33,55,.25)!important;}
-        [data-theme="light"] tbody tr:nth-child(odd) td{background:rgba(255,255,255,.95)!important;}
-        [data-theme="light"] tbody tr:nth-child(even) td{background:rgba(248,250,252,.9)!important;}
+        thead tr{background:var(--thbg)!important;}
+        thead th{background:var(--thbg)!important;color:var(--tmut)!important;padding:12px 16px!important;font-size:.72rem!important;font-weight:600!important;text-transform:uppercase!important;letter-spacing:.6px!important;border:none!important;text-align:left;}
+        tbody tr:nth-child(odd) td{background:var(--trodd)!important;}
+        tbody tr:nth-child(even) td{background:var(--treven)!important;}
+        tbody tr:hover td{background:var(--trhov)!important;}
+        tbody td{color:var(--tsub)!important;padding:13px 16px!important;border-bottom:1px solid var(--tbor)!important;border-top:none!important;border-left:none!important;border-right:none!important;vertical-align:middle;}
+        [data-theme="light"] tbody td{border-bottom-color:rgba(0,0,0,.05)!important;}
+        tbody tr:last-child td{border-bottom:none!important;}
         tbody tr:hover td{background:rgba(59,130,246,.09)!important;}
         tbody td{color:var(--tsub)!important;padding:13px 16px!important;border-bottom:1px solid rgba(255,255,255,.05)!important;border-top:none!important;border-left:none!important;border-right:none!important;vertical-align:middle;}
         [data-theme="light"] tbody td{border-bottom-color:rgba(0,0,0,.05)!important;}
