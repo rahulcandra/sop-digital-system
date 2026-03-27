@@ -530,7 +530,7 @@ $greeting_icon = $hour < 12 ? '🌅' : ($hour < 17 ? '☀️' : ($hour < 20 ? '�
                         $res = mysqli_query($conn,"SELECT s.*,c.nama_kategori FROM sop s LEFT JOIN categories c ON s.kategori_id=c.id ORDER BY s.created_at DESC LIMIT 6");
                         $ss  = ['Draft'=>'background:rgba(71,85,105,.25);color:#94a3b8;border:1px solid rgba(71,85,105,.4)','Review'=>'background:rgba(245,158,11,.20);color:#f59e0b;border:1px solid rgba(245,158,11,.4)','Disetujui'=>'background:rgba(16,185,129,.20);color:#10b981;border:1px solid rgba(16,185,129,.4)','Revisi'=>'background:rgba(239,68,68,.20);color:#ef4444;border:1px solid rgba(239,68,68,.4)'];
                         $dot_colors = ['Draft'=>'gray','Review'=>'orange','Disetujui'=>'green','Revisi'=>'red'];
-                        $dot_icons  = ['Draft'=>'fa-pencil-alt','Review'=>'fa-search','Disetujui'=>'fa-check','Revisi'=>'fa-redo'];
+                        $dot_icons  = ['Draft'=>'fa-pencil-alt','Review'=>'fa-file-alt','Disetujui'=>'fa-check','Revisi'=>'fa-redo'];
                         ?>
                         <div class="activity-list">
                             <?php if ($res && mysqli_num_rows($res)>0): while($row=mysqli_fetch_assoc($res)): $s=trim($row['status']); ?>
