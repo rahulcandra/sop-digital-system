@@ -901,7 +901,7 @@ if (isset($_SESSION['user_id'])) {
                 <div class="widget-icon wi-blue"><i class="fas fa-file-lines"></i></div>
                 <div class="widget-text">
                     <span class="wt-label">Dokumen Aktif</span>
-                    <span class="wt-val">50+ SOP</span>
+                    <span class="wt-val">99+ SOP</span>
                 </div>
             </div>
             <div class="widget widget-3">
@@ -919,24 +919,24 @@ if (isset($_SESSION['user_id'])) {
                             <span class="dash-dot dash-dot-y"></span>
                             <span class="dash-dot dash-dot-g"></span>
                         </div>
-                        <span class="dash-title">SOP Digital Dashboard</span>
+                        <span class="dash-title">SOP Digital System</span>
                         <span class="dash-badge"><i class="fas fa-circle" style="font-size:7px;margin-right:4px"></i>Live</span>
                     </div>
                     <div class="dash-stats">
                         <div class="dash-stat-cell">
-                            <div class="ds-num">50</div>
+                            <div class="ds-num">100</div>
                             <div class="ds-label">Total SOP</div>
-                            <div class="ds-trend ds-up"><i class="fas fa-arrow-trend-up"></i> +8%</div>
+                            <div class="ds-trend ds-up"><i class="fas fa-arrow-trend-up"></i> +60%</div>
                         </div>
                         <div class="dash-stat-cell">
-                            <div class="ds-num">4</div>
-                            <div class="ds-label">Kategori</div>
-                            <div class="ds-trend ds-up"><i class="fas fa-arrow-trend-up"></i> +4%</div>
+                            <div class="ds-num">10</div>
+                            <div class="ds-label">Kategori SOP</div>
+                            <div class="ds-trend ds-up"><i class="fas fa-arrow-trend-up"></i> +6%</div>
                         </div>
                         <div class="dash-stat-cell">
                             <div class="ds-num">99%</div>
-                            <div class="ds-label">Aktif</div>
-                            <div class="ds-trend ds-up"><i class="fas fa-arrow-trend-up"></i> +1%</div>
+                            <div class="ds-label"> Role Aktif</div>
+                            <div class="ds-trend ds-up"><i class="fas fa-arrow-trend-up"></i> +5%</div>
                         </div>
                     </div>
                     <div class="dash-chart-wrap">
