@@ -128,8 +128,21 @@ $flash     = getFlashMessage();
 $cur_nama  = getNamaLengkap();
 $cur_email = $_SESSION['email'] ?? '';
 $cur_init  = strtoupper(substr($cur_nama, 0, 1));
-$cur_foto  = $_SESSION['foto_profil'] ?? null;
-$cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
+$cur_foto = $_SESSION['foto_profil'] ?? null;
+
+if (!$cur_foto) {
+    $q = $conn->prepare("SELECT foto_profil FROM users WHERE id = ? LIMIT 1");
+    $q->bind_param("i", $user_id);
+    $q->execute();
+    $q->bind_result($cur_foto);
+    $q->fetch();
+    $q->close();
+    if ($cur_foto) {
+        $_SESSION['foto_profil'] = $cur_foto; // simpan ke session supaya tidak query terus
+    }
+}
+
+$cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/' . $cur_foto : null;
 
 $hour          = (int)date('H');
 $greeting      = $hour < 12 ? 'Selamat Pagi' : ($hour < 17 ? 'Selamat Siang' : ($hour < 20 ? 'Selamat Sore' : 'Selamat Malam'));

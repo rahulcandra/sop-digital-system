@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['username'] = $user['username'];
             $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
             $_SESSION['role'] = $user['role'];
+            $_SESSION['foto_profil']  = $user['foto_profil'];
             
             if ($remember_me) {
                 setcookie('remember_username', $username, time() + (86400 * 30), "/"); 
