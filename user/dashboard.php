@@ -325,7 +325,7 @@ $greeting_icon = $hour < 12 ? '🌅' : ($hour < 17 ? '☀️' : ($hour < 20 ? '�
         tbody td{color:var(--tsub)!important;padding:13px 16px!important;border-bottom:1px solid var(--tbor)!important;border-top:none!important;border-left:none!important;border-right:none!important;vertical-align:middle;}
         [data-theme="light"] tbody td{border-bottom-color:rgba(0,0,0,.05)!important;}
         tbody tr:last-child td{border-bottom:none!important;}
-        tbody tr:hover td{background:rgba(59,130,246,.09)!important;}
+        tbody tr:hover td{background:var(--trhov)!important;}
         tbody td{color:var(--tsub)!important;padding:13px 16px!important;border-bottom:1px solid rgba(255,255,255,.05)!important;border-top:none!important;border-left:none!important;border-right:none!important;vertical-align:middle;}
         [data-theme="light"] tbody td{border-bottom-color:rgba(0,0,0,.05)!important;}
         tbody tr:last-child td{border-bottom:none!important;}
