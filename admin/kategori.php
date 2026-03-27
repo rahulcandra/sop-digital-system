@@ -684,7 +684,23 @@ function searchTable(inputId, tableId){
 function editKategori(id){
     document.getElementById('editContent').innerHTML='<div style="text-align:center;padding:30px;color:var(--tmut)"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
     openModal('editModal');
-    fetch('kategori_ajax.php?action=edit&id='+id).then(r=>r.text()).then(d=>{ document.getElementById('editContent').innerHTML=d; });
+    fetch('kategori_ajax.php?action=edit&id='+id)
+    .then(r=>r.text())
+    .then(d=>{
+        var temp = document.createElement('div');
+        temp.innerHTML = d;
+        
+        var scripts = temp.querySelectorAll('script');
+        scripts.forEach(s => s.parentNode.removeChild(s));
+        
+        document.getElementById('editContent').innerHTML = temp.innerHTML;
+        
+        scripts.forEach(function(s){
+            var newScript = document.createElement('script');
+            newScript.textContent = s.textContent;
+            document.body.appendChild(newScript);
+        });
+    });
 }
 function confirmDelete(id,type){ return confirm("Apakah Anda yakin ingin menghapus "+type+" ini?"); }
 

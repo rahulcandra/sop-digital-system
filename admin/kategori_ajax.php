@@ -61,50 +61,46 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                     </button>
                 </div>
             </form>
-            <script>
-                // Initialize validation for edit form after it's loaded
-                (function() {
-                    const editNama = document.getElementById('edit_nama');
-                    const errorNama = document.getElementById('error-edit-nama');
-                    const chkEdit = document.getElementById('confirmEdit');
-                    const btnEdit = document.getElementById('btnSimpanEdit');
-                    const editForm = document.getElementById('formEditKategori');
+<script>
+(function() {
+    const editNama = document.getElementById('edit_nama');
+    const errorNama = document.getElementById('error-edit-nama');
+    const chkEdit = document.getElementById('confirmEdit');
+    const btnEdit = document.getElementById('btnSimpanEdit');
+    const editForm = document.getElementById('formEditKategori');
 
-                    function validateEditForm() {
-                        let isValid = true;
-                        const namaVal = editNama.value.trim();
+    function validateEditForm() {
+        const namaVal = editNama.value.trim();
+        if (namaVal.length < 3) {
+            errorNama.style.display = 'flex';
+            errorNama.querySelector('span').textContent = 'Nama kategori minimal 3 karakter.';
+            return false;
+        }
+        errorNama.style.display = 'none';
+        return true;
+    }
 
-                        if (namaVal.length < 3) {
-                            errorNama.style.display = 'flex';
-                            errorNama.querySelector('span').textContent = 'Nama kategori minimal 3 karakter.';
-                            isValid = false;
-                        } else {
-                            errorNama.style.display = 'none';
-                        }
-                        return isValid;
-                    }
+    function updateEditButton() {
+        const valid = validateEditForm();
+        const enabled = chkEdit.checked && valid;
+        btnEdit.disabled = !enabled;
+        btnEdit.style.opacity = enabled ? '1' : '.45';
+        btnEdit.style.cursor = enabled ? 'pointer' : 'not-allowed';
+    }
 
-                    function updateEditButton() {
-                        const valid = validateEditForm();
-                        const enabled = chkEdit.checked && valid;
-                        btnEdit.disabled = !enabled;
-                        btnEdit.style.opacity = enabled ? '1' : '.45';
-                        btnEdit.style.cursor = enabled ? 'pointer' : 'not-allowed';
-                    }
+    editNama.addEventListener('input', updateEditButton);
+    chkEdit.addEventListener('change', updateEditButton);
 
-                    editNama.addEventListener('input', updateEditButton);
-                    chkEdit.addEventListener('change', updateEditButton);
-                    updateEditButton(); // initial state
+    setTimeout(updateEditButton, 0);
 
-                    editForm.addEventListener('submit', function(e) {
-                        if (!validateEditForm() || !chkEdit.checked) {
-                            e.preventDefault();
-                            alert('Harap periksa kembali: nama kategori minimal 3 karakter dan konfirmasi harus dicentang.');
-                            return false;
-                        }
-                    });
-                })();
-            </script>
+    editForm.addEventListener('submit', function(e) {
+        if (!validateEditForm() || !chkEdit.checked) {
+            e.preventDefault();
+            return false;
+        }
+    });
+})();
+</script>
             <?php
         } else {
             echo '<p style="color:red">Data Kategori tidak ditemukan.</p>';
