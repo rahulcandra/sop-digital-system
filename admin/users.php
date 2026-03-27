@@ -114,12 +114,25 @@ if (isset($_GET['delete'])) {
     header('Location: users.php'); exit();
 }
 
-$result       = mysqli_query($conn,"SELECT * FROM users ORDER BY created_at DESC");
-$flash        = getFlashMessage();
-$cur_nama     = getNamaLengkap();
-$cur_email    = $_SESSION['email'] ?? '';
-$cur_init     = strtoupper(substr($cur_nama, 0, 1));
-$cur_foto     = $_SESSION['foto_profil'] ?? null;
+$user_id = getUserId();
+$result  = mysqli_query($conn,"SELECT * FROM users ORDER BY created_at DESC");
+$flash   = getFlashMessage();
+
+$cur_nama  = getNamaLengkap();
+$cur_email = $_SESSION['email'] ?? '';
+$cur_init  = strtoupper(substr($cur_nama, 0, 1));
+
+// ── FIX: Ambil foto dari session, fallback ke DB jika kosong ──
+$cur_foto = $_SESSION['foto_profil'] ?? null;
+if (!$cur_foto) {
+    $q = $conn->prepare("SELECT foto_profil FROM users WHERE id = ? LIMIT 1");
+    $q->bind_param("i", $user_id);
+    $q->execute();
+    $q->bind_result($cur_foto);
+    $q->fetch();
+    $q->close();
+    if ($cur_foto) $_SESSION['foto_profil'] = $cur_foto;
+}
 $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
 ?>
 <!DOCTYPE html>
@@ -175,7 +188,6 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
         .user-trigger:hover{background:var(--dd-hover);}
         .user-avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;overflow:hidden;}
         .user-avatar img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
-        #fotoPreview:hover{opacity:.85;border-color:rgba(59,130,246,.7)!important;box-shadow:0 0 0 4px rgba(59,130,246,.15);}
         .user-trigger-name{font-size:13px;font-weight:600;color:var(--tm);}
         .user-trigger-chevron{font-size:10px;color:var(--tmut);transition:transform .22s;margin-left:1px;}
         .user-trigger-chevron.open{transform:rotate(180deg);}
@@ -186,6 +198,8 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
         .dd-sep{height:1px;background:var(--dd-sep);margin:3px 0;}
         .dd-item-logout{color:var(--dd-danger)!important;font-weight:600;}
         .dd-item-logout:hover{background:rgba(239,68,68,.07)!important;}
+
+        /* MODALS OVERLAY (Edit Profil & Password) */
         .modal-overlay{position:fixed;inset:0;z-index:10000;background:rgba(2,6,23,.55);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease;padding:20px;}
         .modal-overlay.show{opacity:1;pointer-events:auto;}
         .modal-card{background:var(--sb);border:1px solid var(--gb);border-radius:16px;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,.38);transform:scale(.96) translateY(14px);transition:transform .22s ease;overflow:hidden;}
@@ -213,6 +227,8 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
         .mf-btn-save{padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;background:linear-gradient(90deg,#3b82f6,#8b5cf6);color:#fff;border:none;box-shadow:0 4px 12px rgba(59,130,246,.28);transition:.2s;display:flex;align-items:center;gap:6px;}
         .mf-btn-save:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(139,92,246,.36);}
         .mf-btn-save:disabled{opacity:.65;cursor:not-allowed;transform:none;}
+
+        /* LAYOUT */
         .content-wrapper{padding:24px;}
         .card{background:var(--cb)!important;border:1px solid var(--gb)!important;border-radius:16px!important;box-shadow:0 4px 24px rgba(0,0,0,.10);margin-bottom:24px;overflow:hidden;}
         .card-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--gb);}
@@ -227,11 +243,20 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
         tbody tr:hover td{background:var(--trhov)!important;}
         tbody td{color:var(--tsub)!important;padding:13px 16px!important;border-bottom:1px solid var(--tbor)!important;border-top:none!important;border-left:none!important;border-right:none!important;vertical-align:middle;}
         tbody tr:last-child td{border-bottom:none!important;}
+
+        /* USER CELL — foto profil di tabel */
         .user-cell{display:flex;align-items:center;gap:10px;}
-        .user-cell-avatar{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+        .user-cell-avatar{
+            width:36px;height:36px;border-radius:9px;
+            background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+            color:#fff;display:flex;align-items:center;justify-content:center;
+            font-weight:700;font-size:13px;flex-shrink:0;overflow:hidden;
+        }
+        .user-cell-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
         .user-cell-info{display:flex;flex-direction:column;gap:2px;}
         .user-cell-name{font-weight:600;color:var(--tm)!important;font-size:13.5px;line-height:1.3;}
         .user-cell-username{font-size:11px;color:var(--tmut)!important;display:flex;align-items:center;gap:3px;}
+
         .action-btns{display:flex;gap:5px;align-items:center;}
         .action-btns .btn-sm{padding:6px 9px!important;font-size:12px!important;border-radius:7px!important;}
         .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;white-space:nowrap;}
@@ -262,6 +287,8 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
         .pg-btn.active{background:linear-gradient(135deg,#3b82f6,#6366f1);border-color:transparent;color:#fff;box-shadow:0 3px 10px rgba(59,130,246,.35);}
         .pg-btn:disabled{opacity:.35;cursor:not-allowed;}
         .pg-btn.pg-arrow{font-size:11px;}
+
+        /* MODAL TAMBAH/EDIT USER (style lama) */
         .modal{display:none;position:fixed;z-index:9999;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);}
         .modal-content{background:var(--mbg)!important;border:1px solid var(--mbor)!important;border-radius:16px;width:90%;max-width:520px;margin:4% auto;box-shadow:0 20px 50px rgba(0,0,0,.4);}
         .modal-header{padding:18px 22px;border-bottom:1px solid var(--mbor);display:flex;align-items:center;justify-content:space-between;}
@@ -286,32 +313,12 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
         .confirm-box .confirm-text{font-size:12px;color:#fca5a5;line-height:1.6;}
         .confirm-box .confirm-text strong{color:#f87171;}
         .form-actions{display:flex;gap:8px;}
-    
+
         /* NUCLEAR FIX */
         html, body { height: auto !important; min-height: 0 !important; }
-        .dashboard-wrapper {
-        display: flex !important;
-        min-height: 100vh !important;
-        max-height: none !important;
-        align-items: stretch !important;
-        }
-        .sidebar {
-        width: 260px !important;
-        flex-shrink: 0 !important;
-        position: sticky !important;
-        top: 0 !important;
-        height: 100vh !important;
-        overflow-y: auto !important;
-        margin-left: 0 !important;
-        }
-        .main-content {
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-        min-height: unset !important;
-        height: auto !important;
-        margin-left: 0 !important;
-        background: transparent !important;
-        }
+        .dashboard-wrapper {display:flex!important;min-height:100vh!important;max-height:none!important;align-items:stretch!important;}
+        .sidebar {width:260px!important;flex-shrink:0!important;position:sticky!important;top:0!important;height:100vh!important;overflow-y:auto!important;margin-left:0!important;}
+        .main-content {flex:1 1 auto!important;min-width:0!important;min-height:unset!important;height:auto!important;margin-left:0!important;background:transparent!important;}
     </style>
 </head>
 <body class="dashboard-page">
@@ -342,7 +349,7 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
                     <div class="user-trigger" id="userTrigger">
                         <div class="user-avatar" id="topbarAvatar">
                             <?php if ($cur_foto_url): ?>
-                                <img src="<?php echo $cur_foto_url; ?>" alt="foto">
+                                <img src="<?php echo htmlspecialchars($cur_foto_url); ?>" alt="foto">
                             <?php else: ?>
                                 <?php echo $cur_init; ?>
                             <?php endif; ?>
@@ -391,27 +398,45 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
                             </thead>
                             <tbody id="userTableBody">
                                 <?php
-                                $no=1; $total_rows=mysqli_num_rows($result);
-                                while ($row=mysqli_fetch_assoc($result)):
-                                    $initial=strtoupper(substr($row['nama_lengkap'],0,1));
+                                $no = 1;
+                                $total_rows = mysqli_num_rows($result);
+                                while ($row = mysqli_fetch_assoc($result)):
+                                    $initial     = strtoupper(substr($row['nama_lengkap'], 0, 1));
+                                    // ── FIX: render foto di tabel ──
+                                    $row_foto    = !empty($row['foto_profil']) ? $row['foto_profil'] : null;
+                                    $row_foto_url = $row_foto
+                                        ? '../assets/uploads/foto_profil/' . htmlspecialchars($row_foto)
+                                        : null;
                                 ?>
                                 <tr>
                                     <td><?php echo $no++; ?></td>
                                     <td>
                                         <div class="user-cell">
-                                            <div class="user-cell-avatar"><?php echo $initial; ?></div>
+                                            <div class="user-cell-avatar">
+                                                <?php if ($row_foto_url): ?>
+                                                    <img src="<?php echo $row_foto_url; ?>" alt="foto">
+                                                <?php else: ?>
+                                                    <?php echo $initial; ?>
+                                                <?php endif; ?>
+                                            </div>
                                             <div class="user-cell-info">
                                                 <span class="user-cell-name"><?php echo htmlspecialchars($row['nama_lengkap']); ?></span>
                                                 <span class="user-cell-username"><i class="fas fa-at" style="font-size:10px"></i><?php echo htmlspecialchars($row['username']); ?></span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td><?php if($row['role']=='admin'): ?><span class="badge badge-admin"><i class="fas fa-user-shield"></i> Admin</span><?php else: ?><span class="badge badge-user"><i class="fas fa-user"></i> User</span><?php endif; ?></td>
+                                    <td>
+                                        <?php if($row['role']=='admin'): ?>
+                                            <span class="badge badge-admin"><i class="fas fa-user-shield"></i> Admin</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-user"><i class="fas fa-user"></i> User</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td style="font-size:12px;color:var(--tmut)!important;white-space:nowrap"><?php echo date('d/m/Y H:i',strtotime($row['created_at'])); ?></td>
                                     <td>
                                         <div class="action-btns">
                                             <button onclick='editUser(<?php echo json_encode($row); ?>)' class="btn btn-warning btn-sm" title="Edit"><i class="fas fa-edit"></i></button>
-                                            <?php if ($row['id']!=getUserId()): ?>
+                                            <?php if ($row['id'] != getUserId()): ?>
                                                 <a href="?delete=<?php echo $row['id']; ?>" onclick="return confirmDelete(<?php echo $row['id']; ?>,'user')" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
                                             <?php else: ?>
                                                 <button class="btn btn-sm" disabled style="background:rgba(100,116,139,.3)!important;cursor:not-allowed;opacity:.5;"><i class="fas fa-trash"></i></button>
@@ -420,7 +445,7 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
                                     </td>
                                 </tr>
                                 <?php endwhile;
-                                if ($total_rows==0): ?>
+                                if ($total_rows == 0): ?>
                                 <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--tmut)"><i class="fas fa-users" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Belum ada user</td></tr>
                                 <?php endif; ?>
                             </tbody>
@@ -497,7 +522,6 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
         <form id="formEditProfil" autocomplete="off" enctype="multipart/form-data">
             <input type="hidden" name="action" value="update_profile">
             <div class="modal-body-new">
-
                 <!-- FOTO PROFIL -->
                 <div class="mf-group">
                     <label>Foto Profil</label>
@@ -505,7 +529,7 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
                         <label for="inputFoto" style="cursor:pointer;flex-shrink:0;">
                             <div id="fotoPreview" style="width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;overflow:hidden;border:2px solid rgba(59,130,246,.4);transition:.3s;">
                                 <?php if ($cur_foto_url): ?>
-                                    <img src="<?php echo $cur_foto_url; ?>" style="width:100%;height:100%;object-fit:cover;">
+                                    <img src="<?php echo htmlspecialchars($cur_foto_url); ?>" style="width:100%;height:100%;object-fit:cover;">
                                 <?php else: ?>
                                     <?php echo $cur_init; ?>
                                 <?php endif; ?>
@@ -524,7 +548,6 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
                         <i class="fas fa-check-circle"></i><span></span>
                     </div>
                 </div>
-
                 <!-- NAMA -->
                 <div class="mf-group">
                     <label>NAMA LENGKAP</label>
@@ -533,16 +556,14 @@ $cur_foto_url = $cur_foto ? '../assets/uploads/foto_profil/'.$cur_foto : null;
                         <input type="text" name="nama_lengkap" id="editNama" value="<?php echo htmlspecialchars($cur_nama); ?>" placeholder="Nama lengkap" required>
                     </div>
                 </div>
-
                 <!-- EMAIL -->
                 <div class="mf-group">
                     <label>EMAIL <span style="font-size:10px;opacity:.5;text-transform:none;">(juga sebagai username)</span></label>
                     <div class="mf-wrap">
                         <i class="fas fa-envelope mf-icon"></i>
-                        <input type="email" name="email" id="editEmail" value="<?php echo htmlspecialchars($cur_email); ?>" placeholder="email@sinergi.co.id" required>
+                        <input type="email" name="email" id="editEmail" value="<?php echo htmlspecialchars($cur_email); ?>" placeholder="email@domain.com" required>
                     </div>
                 </div>
-
             </div>
             <div class="modal-footer-new">
                 <button type="button" class="mf-btn-cancel" data-close="modalEditProfil">Batal</button>
@@ -599,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function(){
     trigger.addEventListener('click', function(e){ e.stopPropagation(); var o=dropdown.classList.toggle('show'); chevron.classList.toggle('open',o); });
     document.addEventListener('click', function(e){ if(!dropdown.contains(e.target)&&!trigger.contains(e.target)){ dropdown.classList.remove('show'); chevron.classList.remove('open'); } });
 
-    // MODAL HELPERS
+    // MODAL OVERLAY HELPERS (Edit Profil & Password)
     function openNewModal(id){ document.getElementById(id).classList.add('show'); dropdown.classList.remove('show'); chevron.classList.remove('open'); var al=document.querySelector('#'+id+' .modal-alert'); if(al) al.className='modal-alert'; }
     function closeNewModal(id){ document.getElementById(id).classList.remove('show'); }
 
@@ -629,7 +650,7 @@ document.addEventListener('DOMContentLoaded', function(){
         });
     }
 
-    // EDIT PROFIL
+    // EDIT PROFIL SUBMIT
     document.getElementById('formEditProfil').addEventListener('submit', function(e){
         e.preventDefault();
         var sb=document.getElementById('btnSaveProfil');
@@ -639,8 +660,20 @@ document.addEventListener('DOMContentLoaded', function(){
         .then(function(res){
             showAlert('alertEditProfil',res.message,res.success?'success':'error');
             if(res.success){
+                // Update avatar topbar
                 var ta=document.getElementById('topbarAvatar');
-                if(ta){ if(res.foto_url){ ta.innerHTML='<img src="'+res.foto_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">'; } else { ta.textContent=res.nama.charAt(0).toUpperCase(); } }
+                if(ta){
+                    if(res.foto_url){
+                        ta.innerHTML='<img src="'+res.foto_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
+                    } else {
+                        ta.textContent=res.nama.charAt(0).toUpperCase();
+                    }
+                }
+                // Update preview modal
+                if(res.foto_url){
+                    document.getElementById('fotoPreview').innerHTML='<img src="'+res.foto_url+'" style="width:100%;height:100%;object-fit:cover;">';
+                }
+                // Update nama topbar & form fields
                 var tn=document.getElementById('topbarNama'); if(tn) tn.textContent=res.nama;
                 document.getElementById('editNama').value=res.nama;
                 document.getElementById('editEmail').value=res.email;
@@ -651,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function(){
         .finally(function(){ sb.disabled=false; sb.innerHTML='<i class="fas fa-save"></i> Simpan'; });
     });
 
-    // UBAH PASSWORD
+    // UBAH PASSWORD SUBMIT
     document.getElementById('formUbahPassword').addEventListener('submit', function(e){
         e.preventDefault();
         var np=document.getElementById('newPass').value, cp=document.getElementById('confPass').value;
@@ -733,6 +766,7 @@ function editUser(u){
 }
 function confirmDelete(id,type){ return confirm("Apakah Anda yakin ingin menghapus "+type+" ini?"); }
 
+// PAGINATION
 (function(){
     var PER_PAGE=20,currentPage=1,allRows=[],filteredRows=[];
     function init(){var tbody=document.getElementById('userTableBody');if(!tbody)return;allRows=Array.from(tbody.querySelectorAll('tr'));filteredRows=allRows.slice();render();}
