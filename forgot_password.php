@@ -2,10 +2,13 @@
 session_start();
 require_once 'config/database.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require 'vendor/autoload.php';
+
 $message  = '';
 $msg_type = '';
 
-// ✅ FIX: Base URL yang benar & aman
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host     = $_SERVER['HTTP_HOST'];
 $dir      = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
@@ -18,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg_type = 'danger';
         $message  = 'Format email tidak valid.';
     } else {
-        // ✅ FIX: Prepared statement — anti SQL Injection
         $stmt = $conn->prepare("SELECT id, nama_lengkap, email FROM users WHERE email = ? LIMIT 1");
         $stmt->bind_param("s", $email);
         $stmt->execute();
@@ -31,14 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             date_default_timezone_set('Asia/Jakarta');
             $expire_time = date("Y-m-d H:i:s", strtotime('+1 hour'));
 
-            // ✅ FIX: Update token pakai prepared statement
             $upd = $conn->prepare("UPDATE users SET reset_token = ?, token_expire = ? WHERE id = ?");
             $upd->bind_param("ssi", $token, $expire_time, $user['id']);
             $upd->execute();
 
             $reset_link = $base_url . '/reset_password.php?token=' . urlencode($token);
 
-            $to      = $user['email'];
             $subject = "Permintaan Reset Password - SOP Digital";
 
             $email_body  = "Halo " . $user['nama_lengkap'] . ",\n\n";
@@ -49,25 +49,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email_body .= "Jika Anda tidak meminta reset password, abaikan email ini.\n\n";
             $email_body .= "Terima kasih,\nTim IT Sinergi Nusantara Integrasi";
 
-            $headers  = "From: no-reply@sinergi.co.id\r\n";
-            $headers .= "Reply-To: it@sinergi.co.id\r\n";
-            $headers .= "X-Mailer: PHP/" . phpversion();
+            // ✅ PHPMailer via Gmail SMTP
+            $mail = new PHPMailer(true);
+            $mail_sent = false;
 
-            $mail_sent = @mail($to, $subject, $email_body, $headers);
+            try {
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'rahulcandra19@gmail.com';  // ← Gmail Anda
+                $mail->Password   = 'ooxc vbww vxwm dcbn';        // ← Ganti dengan App Password 16 karakter
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
+
+                $mail->setFrom('rahulcandra19@gmail.com', 'SOP Digital - Sinergi');
+                $mail->addAddress($user['email'], $user['nama_lengkap']);
+
+                $mail->isHTML(false);
+                $mail->Subject = $subject;
+                $mail->Body    = $email_body;
+
+                $mail->send();
+                $mail_sent = true;
+
+            } catch (Exception $e) {
+                $mail_sent = false;
+                error_log("Mailer Error: " . $mail->ErrorInfo);
+            }
 
             if ($mail_sent) {
                 $msg_type = 'success';
                 $message  = 'Tautan reset password telah dikirim ke email Anda. Silakan cek <b>Inbox</b> atau folder <b>Spam</b>.';
             } else {
-                // ✅ FIX: Localhost fallback — tampilkan link langsung
+                // Fallback mode testing
                 $msg_type = 'warning';
-                $message  = 'Gagal mengirim email (server lokal tidak mendukung fungsi mail).<br><br>'
+                $message  = 'Gagal mengirim email. Periksa konfigurasi SMTP.<br><br>'
                           . '<b>[MODE TESTING]</b> Gunakan tautan ini langsung:<br>'
                           . '<a href="' . htmlspecialchars($reset_link) . '" style="color:inherit;font-weight:600;text-decoration:underline;" target="_blank">'
                           . '🔗 Klik di sini untuk reset password</a>';
             }
         } else {
-            // Pesan generik — tidak bocorkan apakah email terdaftar
             $msg_type = 'info';
             $message  = 'Jika email tersebut terdaftar, tautan reset telah dikirimkan. Silakan cek Inbox Anda.';
         }
@@ -425,7 +446,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Sinkron tema
     const themeToggleBtn = document.getElementById('theme-toggle');
     const themeIcon      = themeToggleBtn.querySelector('i');
     const htmlEl         = document.documentElement;
@@ -447,7 +467,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Anti double-submit
     const form      = document.getElementById('forgotForm');
     const submitBtn = document.getElementById('submitBtn');
 
