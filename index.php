@@ -882,7 +882,7 @@ if (isset($_SESSION['user_id'])) {
                     <div class="stat-l">Waktu Aktif</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-n">4<em>+</em></div>
+                    <div class="stat-n">10<em>+</em></div>
                     <div class="stat-l">Kategori Aktif</div>
                 </div>
             </div>
