@@ -874,7 +874,7 @@ if (isset($_SESSION['user_id'])) {
             </div>
             <div class="hero-stats">
                 <div class="stat-item">
-                    <div class="stat-n">50<em>+</em></div>
+                    <div class="stat-n">100<em>+</em></div>
                     <div class="stat-l">Dokumen SOP</div>
                 </div>
                 <div class="stat-item">
