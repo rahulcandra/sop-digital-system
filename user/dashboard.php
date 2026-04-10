@@ -486,7 +486,7 @@ $greeting_icon = $hour < 12 ? '🌅' : ($hour < 17 ? '☀️' : ($hour < 20 ? '�
                     <span>Silakan periksa dan perbaiki dokumen SOP Anda di tabel Status SOP di bawah ini.</span>
                 </div>
                 <a href="#status-sop" class="btn btn-sm" style="background:linear-gradient(135deg,#ef4444,#dc2626)!important;margin-left:auto;flex-shrink:0">
-                    <i class="fas fa-arrow-down"></i> Lihat
+                    <i class="fas fa-arrow-down"></i> Lihat Sekarang!
                 </a>
             </div>
             <?php endif; ?>
